@@ -1,5 +1,6 @@
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/ldem_4_apollo17_cutout.bin
 data/processed/*
 !data/processed/.gitkeep
 .pytest_cache/
