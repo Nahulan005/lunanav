@@ -418,6 +418,175 @@ footer i { width: 3px; height: 3px; background: #6484a2; border-radius: 50%; }
   .table-note { align-items: flex-start; }
   footer { font-size: 8px; }
 }
+
+/* Terrain Provenance HUD Panel */
+.terrain-provenance-panel {
+  padding: 16px 18px;
+  margin-bottom: 17px;
+}
+.terrain-panel-title h2 {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #e2f1ff;
+  letter-spacing: .5px;
+}
+.terrain-panel-subtitle {
+  font-size: 10px;
+  color: #7899b8;
+  margin-top: 3px;
+}
+.terrain-provenance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px 16px;
+  margin: 14px 0;
+  padding: 14px;
+  background: #06142380;
+  border: 1px solid #1a334d;
+  border-radius: 4px;
+}
+.provenance-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.provenance-field .field-label {
+  font: 8px var(--mono);
+  color: #698fae;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+.provenance-field .field-value {
+  font-size: 11px;
+  color: #c4dff7;
+  font-weight: 500;
+  word-break: break-word;
+}
+.provenance-field .highlight-value {
+  color: #6fe3b1;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.sample-indicator {
+  font-size: 9px;
+  color: #8bb0cf;
+  font-style: italic;
+  font-family: var(--sans);
+}
+.units-note {
+  font-size: 8px;
+  color: #7296b6;
+  font-weight: normal;
+}
+.validation-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  background: #0f2c25;
+  border: 1px solid #23654d;
+  border-radius: 3px;
+  color: #7ce6b8;
+  font: 9px var(--mono);
+  max-width: fit-content;
+}
+.terrain-disclaimer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid #162f46;
+  font-size: 9px;
+  color: #82a4c2;
+  line-height: 1.5;
+}
+.disclaimer-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+.disclaimer-line svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #6eaed7;
+}
+.status-light.connected {
+  background: var(--green);
+  box-shadow: 0 0 8px #70e3b077;
+}
+.status-light.fallback {
+  background: var(--amber);
+  box-shadow: 0 0 8px #f5a62377;
+}
+.small-badge.success {
+  color: #7ce6b8;
+  border-color: #266b52;
+  background: #0d2821;
+}
+.small-badge.warning {
+  color: #f5b942;
+  border-color: #75551c;
+  background: #2b1f09;
+}
+.workspace-badge.connected {
+  color: #7ce6b8;
+  border-color: #266b52;
+}
+.workspace-badge.fallback {
+  color: #e5b367;
+  border-color: #5e4624;
+}
+
+/* Compact terrain notice & limitation list */
+.terrain-compact-notice {
+  padding: 14px 18px;
+  margin-bottom: 17px;
+}
+.terrain-notice-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 9px var(--mono);
+  color: #79a6cb;
+  letter-spacing: .6px;
+  margin-bottom: 9px;
+  flex-wrap: wrap;
+}
+.terrain-notice-header svg {
+  color: #6fb6e3;
+  flex-shrink: 0;
+}
+.terrain-notice-header span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.terrain-limitations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.terrain-limitations-list li {
+  font-size: 10px;
+  color: #92b4d4;
+  line-height: 1.5;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.terrain-limitations-list li::before {
+  content: "•";
+  color: #64a6d4;
+  font-size: 11px;
+  line-height: 1;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
