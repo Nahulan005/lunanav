@@ -13,7 +13,7 @@ from app.providers.mock import (
 )
 from app.schemas.analysis import AnalysisRequest, AnalysisResponse, HealthResponse
 from app.schemas.geometry import SunEarthGeometryResponse
-from app.schemas.terrain import TerrainSampleResponse
+from app.schemas.terrain import TerrainProfile, TerrainSampleResponse
 from app.services.analysis import AnalysisService
 
 router = APIRouter(prefix="/api/v1")
@@ -60,6 +60,21 @@ def terrain_sample(
         ) from error
 
 
+@router.get("/terrain/profile", response_model=TerrainProfile)
+def terrain_profile(
+    latitude: Annotated[float, Query(ge=-90, le=90, allow_inf_nan=False)],
+    longitude: Annotated[float, Query(ge=-180, le=180, allow_inf_nan=False)],
+    provider: Annotated[LolaTerrainProvider, Depends(get_terrain_provider)],
+) -> TerrainProfile:
+    try:
+        return provider.profile(latitude, longitude)
+    except TerrainSampleError as error:
+        raise HTTPException(
+            status_code=error.status_code,
+            detail={"code": error.code, "message": str(error)},
+        ) from error
+
+
 def get_geometry_provider() -> JplHorizonsGeometryProvider:
     return JplHorizonsGeometryProvider()
 
@@ -86,16 +101,11 @@ def get_sun_earth_geometry(
     ],
     landing_date: Annotated[
         date | None,
-        Query(
-            alias="landingDate",
-            description="Target observation date (UTC).",
-        ),
+        Query(alias="landingDate", description="Target observation date (UTC)."),
     ] = None,
     date: Annotated[
         date | None,
-        Query(
-            description="Alternative parameter name for target observation date (UTC).",
-        ),
+        Query(description="Alternative parameter name for target observation date (UTC)."),
     ] = None,
     site_id: Annotated[
         str,
