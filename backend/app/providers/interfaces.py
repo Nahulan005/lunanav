@@ -1,9 +1,11 @@
+from datetime import date
 from typing import Protocol
 
 from app.schemas.analysis import (
     AnalysisRequest, EphemerisResult, ImageryResult, ProviderResult,
     TerrainResult, VisibilityResult,
 )
+from app.schemas.geometry import SunEarthGeometryResponse
 
 
 class TerrainProvider(Protocol):
@@ -23,3 +25,14 @@ class VisibilityAnalysisProvider(Protocol):
         self, request: AnalysisRequest, terrain: ProviderResult[TerrainResult],
         ephemeris: ProviderResult[EphemerisResult],
     ) -> ProviderResult[VisibilityResult]: ...
+
+
+class SunEarthGeometryProvider(Protocol):
+    def get_sun_earth_geometry(
+        self,
+        site_id: str,
+        latitude: float,
+        longitude: float,
+        target_date: date,
+        observer_height_m: float = 2.0,
+    ) -> SunEarthGeometryResponse: ...
