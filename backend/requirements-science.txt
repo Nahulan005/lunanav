@@ -1,0 +1,5 @@
+# Optional future local scientific runtime. No data or kernels are included.
+-r requirements.txt
+numpy>=2,<3
+rasterio>=1.4,<2
+spiceypy>=6,<9

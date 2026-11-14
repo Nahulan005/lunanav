@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "prepared_utc": "2026-11-14T06:38:23.062015+00:00",
+  "source_name": "NASA LRO / Lunar Orbiter Laser Altimeter (LOLA), NASA PDS Geosciences Node",
+  "official_instrument_url": "https://science.nasa.gov/mission/lro/lola/",
+  "source_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_4.img",
+  "product_name": "LDEM_4",
+  "product_version": "V3.0",
+  "logical_identifier": "urn:nasa:pds:lro_lola_rdr:data_gridded:ldem_4",
+  "source_artifacts": {
+    "ldem_4.lbl": {
+      "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_4.lbl",
+      "sha256": "b5a197b4d417e3b5e0e84f8fe15f9a1d2203b8eb5d7213236c0ffbc86e940cc6",
+      "bytes": 5107
+    },
+    "ldem_4.xml": {
+      "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_4.xml",
+      "sha256": "534384777b2eea7c98e5a19516f31e218d0b7b18a00134a51f04002a8aa2f57e",
+      "bytes": 11930
+    },
+    "ldem_4.img": {
+      "url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_4.img",
+      "sha256": "c04632eba6449af49e3108ed7c25b3b1c450600abd3690df4fc815853a1af476",
+      "bytes": 2073600
+    }
+  },
+  "source_dimensions": {
+    "width": 1440,
+    "height": 720
+  },
+  "source_dtype": "little-endian signed 16-bit integer",
+  "source_dn_min": -17758,
+  "source_dn_max": 21008,
+  "observed_source_dn_min": -17757,
+  "observed_source_dn_max": 21008,
+  "label_statistics_note": "Observed minimum is -17757 DN, one DN above label minimum -17758; maximum agrees at 21008. All samples are within the declared range. Cause not established; this discrepancy is retained, not corrected.",
+  "units": "m",
+  "scale_factor": 0.5,
+  "elevation_offset_m": 0.0,
+  "reference_radius_m": 1737400.0,
+  "elevation_formula": "elevation_m = raw_dn * 0.5; do not add planetary radius offset",
+  "nodata_value": null,
+  "nodata_policy": "Neither label declares a sentinel. All source values lie within the label's stated extrema. No missing-data guarantee beyond these checks.",
+  "crs": {
+    "projection": "Equirectangular / Simple Cylindrical",
+    "central_meridian_deg": 180,
+    "standard_parallel_deg": 0,
+    "sphere_radius_m": 1737400,
+    "lunar_frame": "MEAN EARTH/POLAR AXIS OF DE421",
+    "epsg": null
+  },
+  "latitude_convention": "planetocentric",
+  "longitude_convention": "positive-east; source 0..360 degrees",
+  "pixel_registration": "pixel center",
+  "pixel_scale_per_degree": 4,
+  "label_projected_pixel_spacing_m": 7580.84,
+  "coordinate_method": "Use label angular grid at exactly 4 pixels/degree; no terrestrial CRS or frame transformation. Rounded projected spacing is metadata, not the lookup basis.",
+  "crop": {
+    "source_row_offset": 248,
+    "source_col_offset": 96,
+    "width": 64,
+    "height": 64,
+    "bounds_deg": {
+      "west": 24,
+      "east": 40,
+      "south": 12,
+      "north": 28
+    },
+    "boundary_policy": "west/north included; east/south excluded"
+  },
+  "local_raster": "data/raw/ldem_4_apollo17_cutout.bin",
+  "local_sha256": "02384ab144d5f90221040d5fd8e7d05b84820e8dd85e7ae6f424ef272a1b30cd",
+  "local_bytes": 8192,
+  "validation": {
+    "status": "ingestion-verified-not-scientifically-validated",
+    "checks": [
+      "official PDS3/PDS4 labels",
+      "exact byte count",
+      "array and struct decoding agree for all source DNs",
+      "all DNs within label range; minimum discrepancy documented",
+      "unresampled cutout",
+      "demo source byte comparison",
+      "pixel-center coordinate round trip"
+    ],
+    "demo": {
+      "requested": {
+        "latitude": 20.19,
+        "longitude": 30.77
+      },
+      "used": {
+        "latitude": 20.125,
+        "longitude": 30.875
+      },
+      "source_row": 279,
+      "source_col": 123,
+      "raw_dn": -5324,
+      "elevation_m": -2662.0,
+      "roundtrip_source_pixel": [
+        279,
+        123
+      ],
+      "pixel_center_roundtrip_error_deg": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "software": {
+    "python": "3.14.5",
+    "reader": "LunaNav strict LDEM_4 SignedLSB2 reader v1; standard library"
+  },
+  "limitations": [
+    "Coarse 0.25 degree grid; pixel spacing is not elevation accuracy.",
+    "Label minimum differs from file minimum by one DN (0.5 m); the cause is not established. No sample values were adjusted.",
+    "One containing-cell sample; no interpolation or site-scale terrain analysis.",
+    "Input coordinates must already be planetocentric in the label's DE421 mean Earth/polar-axis frame.",
+    "Product warns of possible artifacts at 45-degree latitude band edges.",
+    "No slope, horizon, SPICE, radio link, or landing-safety assessment.",
+    "SHA-256 is computed locally from HTTPS downloads, not an independently published NASA checksum."
+  ]
+}
