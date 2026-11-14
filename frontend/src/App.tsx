@@ -9,6 +9,8 @@ import { MissionHeader } from './components/MissionHeader'
 import { SelectedSitePanel } from './components/SelectedSitePanel'
 import { ScenarioComparison } from './components/ScenarioComparison'
 import { TerrainProvenancePanel } from './components/TerrainProvenancePanel'
+import { SunEarthGeometryPanel, type GeometryPanelState } from './components/SunEarthGeometryPanel'
+import { MissionDecision } from './components/MissionDecision'
 
 function App() {
   const [request, setRequest] = useState<AnalysisRequest>(initialRequest)
@@ -20,6 +22,7 @@ function App() {
   const [backendConnected, setBackendConnected] = useState(false)
   const [terrainResult, setTerrainResult] = useState<TerrainSampleResult | null>(null)
   const [terrainLoading, setTerrainLoading] = useState(false)
+  const [geometryState, setGeometryState] = useState<GeometryPanelState | null>(null)
 
   const selected = landingSites.find((site) => site.id === request.siteId)!
   const analyzedSite = landingSites.find((site) => site.id === analyzedRequest.siteId)!
@@ -215,6 +218,9 @@ function App() {
         </div>
       </section>
 
+      <MissionDecision analysis={analysis} analyzedRequest={analyzedRequest} request={request}
+        siteName={analyzedSite.name} terrain={terrainResult} terrainLoading={terrainLoading} geometry={geometryState} />
+      <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={setGeometryState} />
       <MissionTimeline date={analyzedRequest.landingDate} />
       <ScenarioComparison selectedId={selectedScenarioId} disabled={loading} onSelect={(site) => { setSelectedScenarioId(site.id); selectSite(site) }} />
       <footer>
