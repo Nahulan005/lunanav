@@ -9,6 +9,36 @@ from fastapi.testclient import TestClient
 from app.main import app, origins
 
 
+def assert_health(data: dict) -> None:
+    """Check capability metadata without claiming external-service availability."""
+    assert {"status", "service", "mode", "live_nasa_integrations"} <= data.keys()
+    assert data["status"] == "ok"
+    assert data["service"] == "lunanav-scientific-backend"
+    assert data["mode"] in ("mock", "hybrid")
+    integrations = data["live_nasa_integrations"]
+    assert isinstance(integrations, list)
+    assert all(isinstance(item, str) for item in integrations)
+    assert len(integrations) == len(set(integrations))
+    if data["mode"] == "mock":
+        assert integrations == []
+        return
+
+    from app.api.routes import get_geometry_provider, get_terrain_provider
+    from app.providers.lola import TerrainSampleError
+
+    expected = []
+    try:
+        # Uses the unchanged reader, including its label and raster checksums.
+        get_terrain_provider().sample(20.19, 30.77)
+    except TerrainSampleError:
+        pass  # Failed local integrity must not be advertised as an active dataset.
+    else:
+        expected.append("LOLA: local dataset (integrity checked; not a live NASA service)")
+    if get_geometry_provider().enable_network:
+        expected.append("JPL Horizons: live API enabled (reachability not checked)")
+    assert integrations == expected, "Health must distinguish local data from configured network capability"
+
+
 def verify_http() -> None:
     """Start Uvicorn on an ephemeral loopback port and stop it after a health probe."""
     import json
@@ -31,7 +61,7 @@ def verify_http() -> None:
             assert server.started, "Uvicorn did not start"
             with urlopen(f"http://127.0.0.1:{port}/api/v1/health", timeout=5) as response:
                 assert response.status == 200
-                assert json.load(response)["mode"] == "mock"
+                assert_health(json.load(response))
             print("PASS: Uvicorn started and served HTTP health on loopback.")
         finally:
             server.should_exit = True
@@ -47,8 +77,7 @@ def main() -> None:
     with TestClient(app) as client:
         health = client.get("/api/v1/health")
         assert health.status_code == 200
-        assert health.json()["mode"] == "mock"
-        assert health.json()["live_nasa_integrations"] == []
+        assert_health(health.json())
         response = client.post("/api/v1/analysis", json=payload)
         assert response.status_code == 200, response.text
         result = response.json()
