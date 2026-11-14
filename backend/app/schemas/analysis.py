@@ -110,5 +110,5 @@ class AnalysisResponse(Contract):
 class HealthResponse(Contract):
     status: Literal["ok"] = "ok"
     service: Literal["lunanav-scientific-backend"] = "lunanav-scientific-backend"
-    mode: Literal["mock"] = "mock"
+    mode: Literal["mock", "hybrid"] = "hybrid"
     live_nasa_integrations: list[str] = Field(default_factory=list)

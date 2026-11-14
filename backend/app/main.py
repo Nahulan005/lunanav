@@ -10,7 +10,7 @@ from app.api.routes import router
 load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
 
 app = FastAPI(title="LunaNav Scientific Backend", version="0.1.0",
-              description="Mock mission analysis plus one local NASA LOLA elevation sample endpoint. No live NASA services or validated mission calculations.")
+              description="Hybrid backend: mock mission analysis, local NASA LOLA terrain, and JPL Horizons model-derived geometry. Not scientifically validated for mission operations.")
 origins = [origin.strip() for origin in os.getenv(
     "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
 ).split(",") if origin.strip()]

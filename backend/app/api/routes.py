@@ -30,7 +30,17 @@ def get_analysis_service() -> AnalysisService:
 
 @router.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    return HealthResponse()
+    # Capability metadata, not an external-service uptime probe. Analysis stays mock.
+    integrations = []
+    try:
+        get_terrain_provider().sample(20.19, 30.77)
+    except TerrainSampleError:
+        pass  # Do not advertise a local dataset that fails its integrity checks.
+    else:
+        integrations.append("LOLA: local dataset (integrity checked; not a live NASA service)")
+    if get_geometry_provider().enable_network:
+        integrations.append("JPL Horizons: live API enabled (reachability not checked)")
+    return HealthResponse(mode="hybrid", live_nasa_integrations=integrations)
 
 
 @router.post("/analysis", response_model=AnalysisResponse)
