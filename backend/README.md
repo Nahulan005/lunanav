@@ -1,9 +1,82 @@
 # LunaNav Python backend
 
 FastAPI foundation with typed Pydantic contracts and injectable Python provider
-protocols. All four active providers are mocks. No NASA services, datasets, or SPICE
-kernels are used. The React frontend still uses its existing local mock adapter;
-adding this backend does not connect or change the frontend.
+protocols. The mission-analysis service uses four mock providers. The independent
+terrain sample and profile endpoints read the existing local LOLA LDEM_4 subset.
+They make no external requests. This backend-only profile addition does not change
+the existing frontend integration.
+
+## Local LOLA terrain profile
+
+`GET /api/v1/terrain/profile?latitude=20.19&longitude=30.77` returns a typed
+`TerrainProfile`. It extends the existing sample response with up to four immediate
+cardinal neighbors, minimum/maximum/range, grid resolution, and a coarse slope estimate.
+`GET /api/v1/terrain/sample` keeps its existing implementation and response contract.
+
+The dataset is the existing 8192-byte `data/raw/ldem_4_apollo17_cutout.bin`, with
+unchanged labels and manifest in `data/metadata/`. The profile calls the existing
+sample reader at most five times, retaining its coordinate mapping, 0.5 m/DN scale,
+reference radius (1737400 m), checksum checks, validation, and coverage checks.
+Source/product and full original/subset SHA-256 fields are inherited in the response.
+The profile needs no new data, dependency, configuration, or service.
+
+Coverage stays **12 < latitude <= 28; 24 <= longitude < 40** (degrees east).
+Outside this coverage the center request returns HTTP 422 with
+`detail.code = OUTSIDE_LOCAL_COVERAGE`. Invalid inputs remain 422; data failures
+remain explicit 503 errors without synthetic substitution. A valid edge cell returns
+its available neighbors and lists missing ones rather than extrapolating.
+
+The selected center uses the original containing native angular-grid cell. It is
+reported as `coordinate_used` separately from `coordinate_requested`; there is no
+new geodesic nearest-neighbor search or interpolation. At grid-line ties the existing
+north/west-inclusive, south/east-exclusive convention is preserved.
+
+The profile consists of center, north, east, south, and west cells. Summary extrema
+include only those available cells and do not describe the whole cutout. Neighbor
+elevations use the same units and reference radius as the center. No nodata sentinel
+is declared by this product; existing nodata status and limitations are retained.
+Invalid/corrupt neighbor data fails the request instead of being silently omitted.
+
+For the source's 0.25-degree grid, let `d = radians(0.25)` and let `phi` be the center
+latitude. With reference radius `R = 1737400 m`:
+
+```text
+dy = R * d
+dx = R * cos(phi) * d
+g_north = (height_north - height_south) / (2 * dy)
+g_east  = (height_east - height_west) / (2 * dx)
+slope_deg = degrees(atan(hypot(g_north, g_east)))
+```
+
+All four cardinal neighbors are required. Otherwise `slope_deg` is null and
+`slope_reason` names the missing neighbors. There is no one-sided fallback. Distance
+uses the reference sphere, not terrain-following distance. This is an unvalidated
+grid-gradient estimate over two-cell baselines, not within-cell terrain slope or
+roughness. The source label's rounded projected spacing (7580.84 m) is reported
+separately from the computed north/south and latitude-dependent east/west spacing.
+
+`validation` retains the center sample's ingestion checks; it does not validate
+the derived slope. `provenance.validation` is explicitly `unvalidated`. The original
+single-cell limitations are retained as `source_limitations`; `limitations` describes
+the profile's extended scope and keeps source accuracy and nodata caveats.
+
+Expected values for the example request, derived by bounded inspection of the
+existing local bytes (not an HTTP execution):
+
+| Cell | Latitude | Longitude | Elevation (m) |
+| --- | --- | --- | --- |
+| Center | 20.125 | 30.875 | -2662.0 |
+| North | 20.375 | 30.875 | -1481.0 |
+| East | 20.125 | 31.125 | -2600.5 |
+| South | 19.875 | 30.875 | -2714.5 |
+| West | 20.125 | 30.625 | -2546.0 |
+
+Minimum: -2714.5 m; maximum: -1481.0 m; range: 1233.5 m. Expected coarse slope:
+approximately 4.6562612675 degrees. Neighbor-center spacing is approximately
+7580.837606 m north/south and 7117.983599 m east/west at this center latitude.
+
+This change was limited to static/import checks; no server or long verification
+script was run for the profile milestone.
 
 ## Windows PowerShell setup
 
@@ -89,7 +162,7 @@ than mislabeling them. Never silently fall back from real-data errors to mocks.
 
 ## NASA sources and retained TypeScript contracts
 
-The canonical [source registry](../docs/source-registry.json) remains unchanged and is
+The canonical [source registry](../docs/source-registry.json) is
 read locally for response references. Keep `docs/source-registry.json` with the backend
 when packaging it. All five resources are acknowledged:
 
@@ -100,7 +173,9 @@ when packaging it. All five resources are acknowledged:
 - NASA Celestial Mapping System: terrain/profile/visibility planning reference.
 
 See [architecture](../docs/architecture.md) for official URLs, limitations, and data flow.
-There are no live integrations and no downloaded local NASA datasets. No public API
+The registry's planned-only LOLA status predates the existing local cutout and has
+not been edited by this backend-only change. The sample/profile endpoints use that
+cutout; the other resources remain references or future integrations. No public API
 is assumed for these resources, and NASA data alone does not validate derived results.
 
 `src/providers.ts`, `src/mockProviders.ts`, and `tsconfig.json` are retained **contract
@@ -116,9 +191,10 @@ frontend adapter must be updated explicitly when integration is requested.
 `data/raw/`: immutable downloaded source products and labels (ignored by Git).
 `data/processed/`: derived subsets (ignored by Git).
 `data/metadata/`: small provenance manifests suitable for review and version control.
-All three directories are empty apart from placeholders.
+The existing raw cutout and metadata are retained unchanged; see the profile section
+above for their current use.
 
-Next milestone: select one documented LOLA elevation product that covers one chosen
+Original acquisition milestone (already completed for the existing cutout): select one documented LOLA elevation product that covers one chosen
 coordinate, obtain its label and file manually from a verified official archive link,
 and record product ID, source URL, checksum, frame, projection, datum, scale/offset,
 nodata, bounds, and native pixel spacing. Use Rasterio to transform that coordinate
