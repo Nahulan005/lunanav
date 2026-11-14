@@ -587,6 +587,55 @@ footer i { width: 3px; height: 3px; background: #6484a2; border-radius: 50%; }
   line-height: 1;
 }
 
+.geometry-panel { padding: 16px 18px; margin-bottom: 17px; }
+.geometry-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.geometry-heading h2 { display: flex; align-items: center; gap: 8px; font-size: 14px; margin: 0; }
+.geometry-heading .small-badge { display: inline-flex; align-items: center; gap: 6px; }
+.geometry-provider, .geometry-epoch { font: 11px var(--mono); color: #92b4d4; overflow-wrap: anywhere; line-height: 1.6; }
+.geometry-readings { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 14px 0; }
+.geometry-readings > div { display: flex; align-items: flex-start; gap: 9px; padding: 12px; background: #081726; border: 1px solid #20384d; border-radius: 6px; }
+.geometry-readings svg { color: #e5b367; flex-shrink: 0; }
+.geometry-readings > div:nth-child(n+3) svg { color: #6bd4e8; }
+.geometry-readings span { font-size: 11px; color: #a9bed2; }
+.geometry-readings strong { display: block; margin-top: 7px; color: #e5eff7; font: 19px var(--mono); }
+.geometry-note, .geometry-limitations { font-size: 11px; line-height: 1.65; color: #92b4d4; }
+.geometry-limitations summary { cursor: pointer; color: #9ad9ee; }
+.geometry-limitations ul { padding-left: 18px; }
+@media (max-width: 650px) { .geometry-readings { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.decision-panel { padding: 18px; margin: 17px 0; }
+.decision-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.decision-heading h2, .decision-heatmap h3 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.decision-heading h2 { font-size: 15px; }
+.decision-panel h3 { font-size: 12px; color: #c6e2f2; }
+.decision-panel p { font-size: 12px; line-height: 1.65; color: #a8bed2; }
+.decision-score { margin-left: auto; display: flex; flex-direction: column; gap: 4px; }
+.decision-score strong { font: 26px var(--mono); color: #d8eef9; }
+.decision-score small { font-size: 12px; color: #8daec7; }
+.decision-score span { font-size: 10px; color: #8daec7; }
+.decision-panel .decision-caveat { color: #b7c8d8; font-size: 11px; }
+.decision-panel .decision-pending { color: #e5b367; }
+.decision-quick { margin: 15px 0; padding: 0 14px; border-left: 2px solid #3a93b6; }
+.decision-technical { border-top: 1px solid #20384d; border-bottom: 1px solid #20384d; padding: 12px 0; }
+.decision-technical summary { cursor: pointer; color: #9ad9ee; font-size: 12px; }
+.decision-technical summary:focus-visible { outline: 2px solid #9ad9ee; outline-offset: 4px; }
+.decision-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.decision-facts dt { color: #84aac6; font-size: 11px; margin-bottom: 4px; }
+.decision-facts dd { margin: 0; font-size: 12px; color: #c4d6e5; overflow-wrap: anywhere; line-height: 1.6; }
+.decision-limitations { padding-left: 18px; color: #a8bed2; font-size: 11px; line-height: 1.65; }
+.decision-flow ol { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; list-style: none; padding: 0; counter-reset: decision-step; }
+.decision-flow li { position: relative; background: #081726; border: 1px solid #20384d; border-radius: 6px; padding: 11px; counter-increment: decision-step; }
+.decision-flow li::before { content: counter(decision-step) ' /'; color: #63b8d9; font: 11px var(--mono); }
+.decision-flow li:not(:last-child)::after { content: '→'; position: absolute; right: -10px; top: 40%; color: #63b8d9; }
+.decision-flow strong, .decision-flow span { display: block; font-size: 11px; line-height: 1.5; margin-top: 6px; }
+.decision-flow span { color: #90b1ca; }
+.decision-heatmap { border-top: 1px solid #20384d; padding-top: 16px; margin-top: 16px; }
+.decision-heatmap table { width: 100%; min-width: 640px; }
+.decision-heatmap th, .decision-heatmap td { font-size: 11px; text-align: left; padding: 8px; }
+.heatmap-cell { display: block; padding: 9px; border-radius: 4px; color: #e8f5fc; font-family: var(--mono); }
+@media (max-width: 800px) { .decision-flow ol { grid-template-columns: 1fr; } .decision-flow li:not(:last-child)::after { content: '↓'; right: 15px; top: auto; bottom: -13px; } }
+@media (max-width: 550px) { .decision-facts { grid-template-columns: 1fr; } .decision-score { margin-left: 0; } }
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
