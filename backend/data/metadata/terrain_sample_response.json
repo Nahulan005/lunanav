@@ -1,0 +1,67 @@
+{
+  "mode": "local-derived",
+  "source_name": "NASA LRO / Lunar Orbiter Laser Altimeter (LOLA), NASA PDS Geosciences Node",
+  "source_url": "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_4.img",
+  "product_name": "LDEM_4",
+  "product_version": "V3.0",
+  "coordinate_requested": {
+    "latitude": 20.19,
+    "longitude": 30.77
+  },
+  "coordinate_used": {
+    "latitude": 20.125,
+    "longitude": 30.875
+  },
+  "coordinate_convention": "planetocentric; east-positive longitude; API [-180,180], source [0,360)",
+  "coordinate_reference_system": "Moon MEAN EARTH/POLAR AXIS OF DE421; simple cylindrical/equirectangular, central meridian 180 deg, standard parallel 0 deg, sphere radius 1737400 m; no Earth EPSG CRS",
+  "sampling_method": "containing native grid cell; no interpolation",
+  "source_pixel": {
+    "row": 279,
+    "column": 123
+  },
+  "subset_pixel": {
+    "row": 31,
+    "column": 27
+  },
+  "raw_dn": -5324,
+  "scale_factor": 0.5,
+  "elevation_offset_m": 0.0,
+  "elevation_value": -2662.0,
+  "units": "m",
+  "reference_radius_m": 1737400.0,
+  "nodata_value": null,
+  "nodata_status": "not-flagged-no-sentinel-declared",
+  "checksum_algorithm": "SHA-256",
+  "checksum": "c04632eba6449af49e3108ed7c25b3b1c450600abd3690df4fc815853a1af476",
+  "subset_checksum": "02384ab144d5f90221040d5fd8e7d05b84820e8dd85e7ae6f424ef272a1b30cd",
+  "validation": {
+    "status": "ingestion-verified-not-scientifically-validated",
+    "checks": [
+      "official PDS3/PDS4 labels",
+      "exact byte count",
+      "array and struct decoding agree for all source DNs",
+      "all DNs within label range; minimum discrepancy documented",
+      "unresampled cutout",
+      "demo source byte comparison",
+      "pixel-center coordinate round trip",
+      "runtime subset/label SHA-256",
+      "runtime range and bounds"
+    ],
+    "coordinate_roundtrip_passed": true,
+    "roundtrip_source_pixel": {
+      "row": 279,
+      "column": 123
+    },
+    "scientific_accuracy_validated": false
+  },
+  "limitations": [
+    "Coarse 0.25 degree grid; pixel spacing is not elevation accuracy.",
+    "Label minimum differs from file minimum by one DN (0.5 m); the cause is not established. No sample values were adjusted.",
+    "One containing-cell sample; no interpolation or site-scale terrain analysis.",
+    "Input coordinates must already be planetocentric in the label's DE421 mean Earth/polar-axis frame.",
+    "Product warns of possible artifacts at 45-degree latitude band edges.",
+    "No slope, horizon, SPICE, radio link, or landing-safety assessment.",
+    "SHA-256 is computed locally from HTTPS downloads, not an independently published NASA checksum.",
+    "Neither label declares a sentinel. All source values lie within the label's stated extrema. No missing-data guarantee beyond these checks."
+  ]
+}

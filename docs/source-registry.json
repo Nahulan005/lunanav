@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "reviewedOn": "2026-11-14",
   "liveIntegrations": [],
-  "downloadedDatasets": [],
+  "downloadedDatasets": [{"sourceId": "lola", "product": "LDEM_4 V3.0", "status": "local 64x64 unresampled subset; original 2073600-byte IMG processed in memory", "manifest": "backend/data/metadata/lola_sample_manifest.json"}],
   "resources": [
     {
       "id": "moon-trek",
@@ -23,8 +23,8 @@
       "capability": "Lunar laser-altimetry topography and associated terrain products",
       "plannedFeature": "Local terrain sampling, slope estimation, and azimuthal horizon profiles",
       "category": "data-source",
-      "integrationStatus": "planned local dataset processing; no products downloaded",
-      "limitations": ["Product and resolution not yet selected", "Pixel spacing is not equivalent to accuracy", "Frames, projection, vertical datum, nodata, and polar coverage require product-specific checks", "Instrument overview is not a terrain API"]
+      "integrationStatus": "local LDEM_4 V3.0 subset ingested; GET /api/v1/terrain/sample returns one containing-cell elevation; no live NASA service, slope, or horizon analysis",
+      "limitations": ["Only a 64x64 subset of the coarse 0.25-degree LDEM_4 grid is available; ingestion verified, scientific accuracy unvalidated", "Pixel spacing is not equivalent to accuracy", "Frames, projection, vertical datum, nodata, and polar coverage require product-specific checks", "Instrument overview is not a terrain API"]
     },
     {
       "id": "lroc",
