@@ -110,9 +110,22 @@ $body = @{
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/analysis -Method Post -ContentType 'application/json' -Body $body
 ```
 
-`.env` is ignored by Git. `CORS_ORIGINS` accepts comma-separated origins; defaults
-are `http://localhost:5173` and `http://127.0.0.1:5173`. If Vite uses another port,
-explicitly add its origin and restart the backend. Credentials are disabled.
+`.env` is ignored by Git. `CORS_ORIGINS` accepts a comma-separated allowlist
+and replaces the defaults when set. Defaults include `https://lunanav.vercel.app`,
+`http://localhost:5173`, and `http://127.0.0.1:5173`. GET, POST, and OPTIONS
+are allowed with Content-Type and Authorization headers. Credentials are disabled;
+use explicit origins, not wildcards. CORS does not authenticate requests.
+
+For Render, set this environment variable and redeploy/restart:
+
+```text
+CORS_ORIGINS=https://lunanav.vercel.app,http://localhost:5173,http://127.0.0.1:5173
+```
+
+An existing Render value containing only localhost overrides the new defaults
+and must be updated. Origins have no paths or trailing slash. If Vite uses another
+port, add its exact origin to the list. This source change does not update Render's
+environment variables or deploy the application automatically.
 No API keys or external service credentials are required.
 
 ## Scientific dependencies

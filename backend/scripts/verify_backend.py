@@ -102,12 +102,16 @@ def main() -> None:
         assert changed["terrain"] == result["terrain"], "Mocks must not imply coordinate calculations"
         paths = client.get("/openapi.json").json()["paths"]
         assert "get" in paths["/api/v1/health"] and "post" in paths["/api/v1/analysis"]
-        if origins:
-            preflight = client.options("/api/v1/analysis", headers={
-                "Origin": origins[0], "Access-Control-Request-Method": "POST",
-                "Access-Control-Request-Headers": "Content-Type"})
-            assert preflight.status_code == 200
-            assert preflight.headers["access-control-allow-origin"] == origins[0]
+        for origin in origins:
+            for method in ("GET", "POST", "OPTIONS"):
+                preflight = client.options("/api/v1/analysis", headers={
+                    "Origin": origin, "Access-Control-Request-Method": method,
+                    "Access-Control-Request-Headers": "Content-Type, Authorization"})
+                assert preflight.status_code == 200, (origin, method, preflight.text)
+                assert preflight.headers["access-control-allow-origin"] == origin
+                assert "access-control-allow-credentials" not in preflight.headers
+                allowed = preflight.headers["access-control-allow-headers"].lower()
+                assert "content-type" in allowed and "authorization" in allowed
         rejected = client.options("/api/v1/analysis", headers={
             "Origin": "https://unconfigured.invalid", "Access-Control-Request-Method": "POST"})
         assert "access-control-allow-origin" not in rejected.headers
