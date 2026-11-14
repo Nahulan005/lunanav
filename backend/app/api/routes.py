@@ -6,7 +6,7 @@ from app.providers.mock import MockTerrainProvider, MockEphemerisProvider, MockI
 from app.schemas.analysis import AnalysisRequest, AnalysisResponse, HealthResponse
 from app.services.analysis import AnalysisService
 from app.providers.lola import LolaTerrainProvider, TerrainSampleError
-from app.schemas.terrain import TerrainSampleResponse
+from app.schemas.terrain import TerrainSampleResponse, TerrainProfile
 
 router = APIRouter(prefix="/api/v1")
 
@@ -38,6 +38,19 @@ def terrain_sample(
 ) -> TerrainSampleResponse:
     try:
         return provider.sample(latitude, longitude)
+    except TerrainSampleError as error:
+        raise HTTPException(status_code=error.status_code,
+                            detail={"code": error.code, "message": str(error)}) from error
+
+
+@router.get("/terrain/profile", response_model=TerrainProfile)
+def terrain_profile(
+    latitude: Annotated[float, Query(ge=-90, le=90, allow_inf_nan=False)],
+    longitude: Annotated[float, Query(ge=-180, le=180, allow_inf_nan=False)],
+    provider: Annotated[LolaTerrainProvider, Depends(get_terrain_provider)],
+) -> TerrainProfile:
+    try:
+        return provider.profile(latitude, longitude)
     except TerrainSampleError as error:
         raise HTTPException(status_code=error.status_code,
                             detail={"code": error.code, "message": str(error)}) from error
