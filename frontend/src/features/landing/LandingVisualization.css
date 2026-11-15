@@ -1,0 +1,1305 @@
+/* ==========================================================================
+   LunaNav - Lunar Landing Visualization (Mission Control Interface)
+   Styling for Shackleton Rim descent simulation mockup
+   ========================================================================== */
+
+:root {
+  --luna-bg-deep: #02050c;
+  --luna-bg-space: #060e1d;
+  --luna-panel-bg: rgba(7, 18, 33, 0.88);
+  --luna-card-bg: rgba(11, 26, 48, 0.75);
+  --luna-border-color: #1e3a58;
+  --luna-border-highlight: #35628e;
+  --luna-text-main: #d8e7f7;
+  --luna-text-muted: #8aa4c0;
+  --luna-cyan: #5ac9ed;
+  --luna-cyan-glow: rgba(90, 201, 237, 0.35);
+  --luna-blue: #4096ff;
+  --luna-green: #52c41a;
+  --luna-gold: #f0c16a;
+  --luna-amber: #fa8c16;
+  --luna-red: #ff4d4f;
+  --luna-mono-font: 'Cascadia Code', 'SF Mono', Consolas, Monaco, monospace;
+}
+
+/* ==========================================================================
+   Container & Global Layout
+   ========================================================================== */
+.luna-landing-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  background: radial-gradient(circle at 50% 0%, #0d1e38 0%, var(--luna-bg-deep) 75%);
+  color: var(--luna-text-main);
+  box-sizing: border-box;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+/* ==========================================================================
+   Header & Mission Status
+   ========================================================================== */
+.luna-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 22px;
+  background: var(--luna-panel-bg);
+  border: 1px solid var(--luna-border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.luna-header-branding {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.luna-badge-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 30% 30%, #205487, #0b1a2d);
+  border: 1px solid #376a9a;
+  color: var(--luna-cyan);
+  box-shadow: 0 0 16px var(--luna-cyan-glow);
+}
+
+.luna-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--luna-mono-font);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--luna-cyan);
+  text-transform: uppercase;
+}
+
+.eyebrow-accent {
+  width: 12px;
+  height: 2px;
+  background: var(--luna-cyan);
+  box-shadow: 0 0 8px var(--luna-cyan);
+}
+
+.luna-title {
+  margin: 4px 0 0;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  color: #ffffff;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.luna-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.luna-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(14, 30, 52, 0.8);
+  border: 1px solid var(--luna-border-color);
+  border-radius: 4px;
+  font-family: var(--luna-mono-font);
+  font-size: 11px;
+  letter-spacing: 0.8px;
+}
+
+.status-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-active {
+  background: var(--luna-cyan);
+  box-shadow: 0 0 10px var(--luna-cyan);
+  animation: pulse-dot 1.2s infinite ease-in-out;
+}
+
+.status-success {
+  background: var(--luna-green);
+  box-shadow: 0 0 10px var(--luna-green);
+}
+
+.status-warning {
+  background: var(--luna-amber);
+  box-shadow: 0 0 10px var(--luna-amber);
+}
+
+.status-idle {
+  background: var(--luna-text-muted);
+}
+
+.mission-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: var(--luna-mono-font);
+  padding: 6px 12px;
+  background: rgba(3, 9, 18, 0.6);
+  border: 1px solid #1c344e;
+  border-radius: 4px;
+}
+
+.clock-label {
+  font-size: 8.5px;
+  color: var(--luna-text-muted);
+  letter-spacing: 1px;
+}
+
+.clock-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--luna-cyan);
+  letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   Prominent Disclaimer Banner
+   ========================================================================== */
+.luna-disclaimer-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(90deg, rgba(240, 193, 106, 0.12) 0%, rgba(13, 26, 44, 0.6) 100%);
+  border-left: 4px solid var(--luna-gold);
+  border-top: 1px solid rgba(240, 193, 106, 0.3);
+  border-right: 1px solid rgba(240, 193, 106, 0.2);
+  border-bottom: 1px solid rgba(240, 193, 106, 0.2);
+  border-radius: 4px;
+  color: #fae1af;
+}
+
+.disclaimer-icon {
+  color: var(--luna-gold);
+  flex-shrink: 0;
+}
+
+.disclaimer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.disclaimer-content strong {
+  font-weight: 600;
+  color: #fff1cc;
+  letter-spacing: 0.2px;
+}
+
+.disclaimer-sub {
+  font-size: 11px;
+  color: #c9b48b;
+}
+
+/* ==========================================================================
+   Main Visualization Stage
+   ========================================================================== */
+.luna-stage-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--luna-border-color);
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.7);
+  background: #010308;
+}
+
+.luna-stage {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #020612 0%, #061122 45%, #08162b 85%);
+}
+
+/* Deep Space Starfield */
+.stars-layer-deep {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 40px 60px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 150px 120px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 280px 40px, #d2e4ff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 390px 210px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 520px 80px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 670px 180px, #e3eeff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 810px 90px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 940px 240px, #ffe4b5, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 1080px 130px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 1220px 50px, #cce4ff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 1340px 190px, #ffffff, rgba(0,0,0,0));
+  background-size: 450px 320px;
+  opacity: 0.65;
+}
+
+.stars-layer-medium {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 90px 180px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 320px 90px, #8ec5fc, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 640px 70px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 880px 160px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(1.5px 1.5px at 1160px 100px, #ffd89b, rgba(0,0,0,0));
+  background-size: 600px 400px;
+  animation: star-shimmer 6s infinite alternate ease-in-out;
+}
+
+.stars-layer-bright {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(2px 2px at 200px 70px, #ffffff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 750px 110px, #cbe3fb, rgba(0,0,0,0)),
+    radial-gradient(2.5px 2.5px at 1020px 60px, #ffffff, rgba(0,0,0,0));
+  background-size: 800px 500px;
+  animation: star-shimmer 3.5s infinite alternate ease-in-out;
+}
+
+.space-nebula-glow {
+  position: absolute;
+  top: -10%;
+  left: 30%;
+  width: 500px;
+  height: 250px;
+  background: radial-gradient(ellipse at center, rgba(31, 86, 140, 0.22) 0%, rgba(9, 23, 44, 0.05) 60%, transparent 80%);
+  pointer-events: none;
+  filter: blur(20px);
+}
+
+/* ==========================================================================
+   Celestial HUD (Earth & Sun Indicators)
+   ========================================================================== */
+.celestial-hud {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.celestial-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: rgba(3, 11, 22, 0.75);
+  border: 1px solid rgba(53, 98, 142, 0.45);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.celestial-card:hover {
+  border-color: var(--luna-cyan);
+  transform: translateY(-1px);
+}
+
+.celestial-icon-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.earth-orb {
+  background: radial-gradient(circle at 35% 35%, #2a6fb2, #0d2847 70%, #030a13);
+  border: 1px solid #4a9be4;
+  color: #7ecef5;
+  box-shadow: 0 0 14px rgba(74, 155, 228, 0.5);
+}
+
+.earth-ping {
+  position: absolute;
+  inset: -3px;
+  border: 1px solid rgba(90, 201, 237, 0.5);
+  border-radius: 50%;
+  animation: ping-wave 3s infinite ease-out;
+}
+
+.sun-orb {
+  background: radial-gradient(circle at 35% 35%, #fff2b2, #f59e0b 60%, #b45309);
+  border: 1px solid #fcd34d;
+  color: #fff9db;
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.65);
+}
+
+.sun-ping {
+  position: absolute;
+  inset: -3px;
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  border-radius: 50%;
+  animation: ping-wave 2.5s infinite ease-out;
+}
+
+.celestial-data {
+  display: flex;
+  flex-direction: column;
+}
+
+.celestial-title {
+  font-family: var(--luna-mono-font);
+  font-size: 8.5px;
+  color: var(--luna-text-muted);
+  letter-spacing: 1px;
+}
+
+.celestial-bearing {
+  font-family: var(--luna-mono-font);
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.celestial-status {
+  font-size: 8px;
+  color: var(--luna-cyan);
+  letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Altitude Guide Marks (HUD Tape Overlay)
+   ========================================================================== */
+.altitude-tape-overlay {
+  position: absolute;
+  left: 20px;
+  top: 12%;
+  height: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.altitude-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mark-line {
+  width: 14px;
+  height: 1px;
+  background: rgba(90, 201, 237, 0.4);
+}
+
+.mark-label {
+  font-family: var(--luna-mono-font);
+  font-size: 9px;
+  color: rgba(145, 175, 202, 0.6);
+  letter-spacing: 0.5px;
+}
+
+.trajectory-line-wrapper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.trajectory-svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   Lunar Lander Craft Assembly
+   ========================================================================== */
+.luna-lander-assembly {
+  position: absolute;
+  left: 50%;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: top 0.08s linear;
+}
+
+.lander-svg {
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.8));
+}
+
+.lander-hud-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 3px 8px;
+  background: rgba(4, 12, 22, 0.85);
+  border: 1px solid rgba(90, 201, 237, 0.4);
+  border-radius: 3px;
+  font-family: var(--luna-mono-font);
+  font-size: 9px;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+}
+
+.lander-callsign {
+  color: var(--luna-cyan);
+  font-weight: 700;
+}
+
+.lander-alt-tag {
+  color: var(--luna-gold);
+}
+
+/* Thruster Plume & Flames */
+.thruster-plume {
+  position: absolute;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 15;
+}
+
+.thruster-core-flame {
+  width: 14px;
+  height: 38px;
+  background: linear-gradient(180deg, #ffffff 0%, #6be3ff 35%, #1890ff 70%, transparent 100%);
+  clip-path: polygon(25% 0%, 75% 0%, 100% 75%, 50% 100%, 0% 75%);
+  animation: flame-pulse 0.12s infinite alternate ease-in-out;
+  box-shadow: 0 0 16px rgba(107, 227, 255, 0.9);
+}
+
+.thruster-outer-glow {
+  position: absolute;
+  top: 0;
+  width: 28px;
+  height: 48px;
+  background: radial-gradient(ellipse at top, rgba(90, 201, 237, 0.6) 0%, rgba(250, 140, 22, 0.3) 60%, transparent 80%);
+  filter: blur(4px);
+  animation: glow-flicker 0.15s infinite alternate ease-in-out;
+}
+
+/* Touchdown Dust Particles */
+.touchdown-dust-effect {
+  position: absolute;
+  top: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 30px;
+  pointer-events: none;
+}
+
+.dust-puff {
+  position: absolute;
+  bottom: 0;
+  width: 44px;
+  height: 18px;
+  background: radial-gradient(ellipse at center, rgba(175, 194, 215, 0.45) 0%, rgba(135, 155, 178, 0.1) 70%, transparent 100%);
+  border-radius: 50%;
+  filter: blur(4px);
+}
+
+.puff-left {
+  left: 4px;
+  animation: dust-spread-left 1.2s infinite ease-out;
+}
+
+.puff-right {
+  right: 4px;
+  animation: dust-spread-right 1.2s infinite ease-out;
+}
+
+/* ==========================================================================
+   Lunar Surface, Ridges & Craters
+   ========================================================================== */
+.lunar-surface-zone {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 165px;
+  pointer-events: none;
+}
+
+/* Distant Massifs (South Pole mountain silhouettes) */
+.lunar-ridge {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.ridge-far {
+  bottom: 85px;
+  height: 60px;
+  background: linear-gradient(180deg, #101e33 0%, #08111e 100%);
+  clip-path: polygon(
+    0% 70%,
+    8% 50%,
+    16% 58%,
+    24% 42%,
+    32% 52%,
+    40% 36%,
+    50% 55%,
+    60% 38%,
+    72% 48%,
+    82% 32%,
+    92% 54%,
+    100% 40%,
+    100% 100%,
+    0% 100%
+  );
+  opacity: 0.85;
+}
+
+/* Mid-distance Shackleton Rim Ridges */
+.ridge-mid {
+  bottom: 50px;
+  height: 80px;
+  background: linear-gradient(180deg, #1a2c47 0%, #0d1726 80%);
+  clip-path: polygon(
+    0% 65%,
+    10% 45%,
+    18% 52%,
+    26% 30%,
+    35% 42%,
+    44% 25%,
+    52% 32%,
+    62% 20%,
+    74% 38%,
+    84% 28%,
+    94% 48%,
+    100% 38%,
+    100% 100%,
+    0% 100%
+  );
+  border-top: 1px solid rgba(130, 185, 240, 0.35);
+  box-shadow: 0 -4px 14px rgba(255, 255, 255, 0.05);
+}
+
+/* Foreground Regolith Terrain */
+.lunar-ground {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 75px;
+  background: linear-gradient(180deg, #1c2738 0%, #101824 50%, #090e17 100%);
+  border-top: 2px solid #36506d;
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.1);
+}
+
+/* Realistic CSS Crater Details */
+.craters-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.lunar-crater {
+  position: absolute;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.crater-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid #3d5878;
+  background: radial-gradient(ellipse at 70% 30%, #060c14 45%, #182537 90%);
+  box-shadow:
+    inset 4px 3px 6px rgba(0, 0, 0, 0.95),
+    0 1px 3px rgba(115, 160, 205, 0.4);
+}
+
+.crater-floor {
+  position: absolute;
+  top: 20%;
+  left: 15%;
+  width: 70%;
+  height: 60%;
+  border-radius: 50%;
+  background: #040810;
+  box-shadow: inset 2px 2px 4px #000000;
+}
+
+.crater-sun-highlight {
+  position: absolute;
+  bottom: -1px;
+  right: 15%;
+  width: 40%;
+  height: 2px;
+  background: rgba(184, 218, 250, 0.5);
+  border-radius: 50%;
+  filter: blur(0.5px);
+}
+
+.crater-deep .crater-floor {
+  background: #010307;
+  box-shadow: inset 3px 3px 6px #000000;
+}
+
+.crater-shallow .crater-floor {
+  background: #09131f;
+}
+
+/* ==========================================================================
+   Glowing Landing Target Marker
+   ========================================================================== */
+.landing-target-marker {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+
+.target-beacon-beam {
+  position: absolute;
+  bottom: 24px;
+  width: 2px;
+  height: 80px;
+  background: linear-gradient(180deg, transparent 0%, rgba(90, 201, 237, 0.8) 100%);
+  box-shadow: 0 0 10px var(--luna-cyan);
+}
+
+.target-rings-pulse {
+  position: absolute;
+  bottom: 0;
+  width: 72px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--luna-cyan);
+  animation: radar-pulse 2s infinite ease-out;
+  pointer-events: none;
+}
+
+.target-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--luna-cyan);
+}
+
+.ring-outer {
+  bottom: 3px;
+  width: 58px;
+  height: 20px;
+  border-style: dashed;
+  box-shadow: 0 0 12px var(--luna-cyan-glow);
+}
+
+.ring-inner {
+  bottom: 7px;
+  width: 32px;
+  height: 12px;
+  background: rgba(90, 201, 237, 0.2);
+  box-shadow: 0 0 8px var(--luna-cyan);
+}
+
+.target-crosshair {
+  position: absolute;
+  bottom: 4px;
+  color: var(--luna-cyan);
+  filter: drop-shadow(0 0 6px var(--luna-cyan));
+}
+
+.target-callout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 26px;
+  padding: 4px 10px;
+  background: rgba(4, 12, 24, 0.88);
+  border: 1px solid var(--luna-cyan);
+  border-radius: 4px;
+  font-family: var(--luna-mono-font);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+  white-space: nowrap;
+}
+
+.target-title {
+  font-size: 8px;
+  color: var(--luna-cyan);
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.target-site-code {
+  font-size: 10px;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.target-coord-tag {
+  font-size: 8px;
+  color: var(--luna-gold);
+}
+
+/* ==========================================================================
+   Mission Control Telemetry & Controls Dashboard
+   ========================================================================== */
+.luna-dashboard-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr;
+  gap: 20px;
+}
+
+.luna-telemetry-panel,
+.luna-controls-panel {
+  background: var(--luna-panel-bg);
+  border: 1px solid var(--luna-border-color);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+}
+
+.panel-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--luna-border-color);
+}
+
+.panel-title-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--luna-mono-font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: var(--luna-cyan);
+  text-transform: uppercase;
+}
+
+.panel-icon {
+  color: var(--luna-cyan);
+}
+
+.source-tag,
+.control-mode-tag {
+  font-family: var(--luna-mono-font);
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.8px;
+}
+
+.source-tag {
+  background: rgba(82, 196, 26, 0.15);
+  border: 1px solid rgba(82, 196, 26, 0.4);
+  color: #73d13d;
+}
+
+.control-mode-tag {
+  background: rgba(64, 150, 255, 0.15);
+  border: 1px solid rgba(64, 150, 255, 0.4);
+  color: #91caff;
+}
+
+/* Telemetry Metrics Grid (Required Values) */
+.telemetry-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.telemetry-card {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  background: var(--luna-card-bg);
+  border: 1px solid var(--luna-border-color);
+  border-radius: 6px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.telemetry-card:hover {
+  border-color: var(--luna-border-highlight);
+  transform: translateY(-1px);
+}
+
+.highlight-card {
+  border-color: #2b557d;
+  background: linear-gradient(135deg, rgba(14, 38, 70, 0.6) 0%, rgba(10, 22, 38, 0.7) 100%);
+}
+
+.metric-eyebrow {
+  font-family: var(--luna-mono-font);
+  font-size: 9px;
+  color: var(--luna-text-muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.site-name {
+  color: var(--luna-cyan);
+}
+
+.status-val {
+  color: var(--luna-gold);
+}
+
+.terrain-val {
+  color: #a0d911;
+  font-size: 13px;
+}
+
+.coords-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: var(--luna-mono-font);
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.coords-readout > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.coord-axis {
+  color: var(--luna-text-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.coord-val {
+  color: #ffffff;
+}
+
+.metric-caption {
+  font-size: 9.5px;
+  color: #718da9;
+  margin-top: 6px;
+}
+
+/* Dynamic Live Flight Metrics */
+.dynamic-telemetry-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.flight-dynamic-card {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  background: rgba(5, 14, 26, 0.85);
+  border: 1px solid var(--luna-border-color);
+  border-radius: 6px;
+}
+
+.flight-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--luna-mono-font);
+  font-size: 9.5px;
+  color: var(--luna-text-muted);
+  letter-spacing: 0.8px;
+  margin-bottom: 8px;
+}
+
+.flight-card-body {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.altitude-digit,
+.speed-digit,
+.progress-digit {
+  font-family: var(--luna-mono-font);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.altitude-digit {
+  color: var(--luna-cyan);
+}
+
+.speed-digit {
+  color: #ffffff;
+}
+
+.progress-digit {
+  color: var(--luna-gold);
+}
+
+.altitude-unit {
+  font-family: var(--luna-mono-font);
+  font-size: 10px;
+  color: var(--luna-text-muted);
+  letter-spacing: 1px;
+}
+
+.phase-badge {
+  font-family: var(--luna-mono-font);
+  font-size: 9px;
+  padding: 2px 6px;
+  background: rgba(90, 201, 237, 0.15);
+  border: 1px solid rgba(90, 201, 237, 0.4);
+  border-radius: 3px;
+  color: var(--luna-cyan);
+  white-space: nowrap;
+}
+
+.speed-caption {
+  font-size: 10px;
+  color: #8aa4c0;
+}
+
+/* Progress & Altitude Bars */
+.altitude-bar-container,
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(20, 36, 56, 0.8);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid #1c3752;
+}
+
+.altitude-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1890ff, var(--luna-cyan));
+  transition: width 0.1s linear;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f5222d 0%, #fa8c16 40%, var(--luna-gold) 75%, #52c41a 100%);
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(240, 193, 106, 0.6);
+}
+
+/* ==========================================================================
+   Mission Controls Panel
+   ========================================================================== */
+.controls-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 18px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.control-btn:focus-visible {
+  outline: 2px solid var(--luna-cyan);
+  outline-offset: 2px;
+}
+
+.btn-start {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+  color: #ffffff;
+  border-color: #40a9ff;
+  box-shadow: 0 4px 14px rgba(24, 144, 255, 0.35);
+}
+
+.btn-start:hover:not(:disabled) {
+  background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(24, 144, 255, 0.5);
+}
+
+.btn-start.btn-active {
+  background: #093766;
+  border-color: #175994;
+  color: #8bbce8;
+  cursor: default;
+}
+
+.btn-pause {
+  background: rgba(18, 38, 64, 0.85);
+  color: #ffffff;
+  border-color: #2b557d;
+}
+
+.btn-pause:hover:not(:disabled) {
+  background: rgba(30, 60, 98, 0.95);
+  border-color: var(--luna-cyan);
+  transform: translateY(-1px);
+}
+
+.btn-reset {
+  background: rgba(12, 24, 40, 0.85);
+  color: var(--luna-text-muted);
+  border-color: #1c3752;
+}
+
+.btn-reset:hover:not(:disabled) {
+  background: rgba(22, 42, 68, 0.95);
+  color: #ffffff;
+  border-color: #386088;
+  transform: translateY(-1px);
+}
+
+.control-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.control-briefing {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: rgba(5, 14, 26, 0.7);
+  border: 1px solid var(--luna-border-color);
+  border-radius: 6px;
+}
+
+.briefing-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.brief-icon {
+  color: var(--luna-cyan);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.briefing-item p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--luna-text-muted);
+}
+
+.briefing-item strong {
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   Keyframe Animations
+   ========================================================================== */
+@keyframes star-shimmer {
+  0% { opacity: 0.4; }
+  100% { opacity: 0.85; }
+}
+
+@keyframes ping-wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes flame-pulse {
+  0% {
+    height: 34px;
+    opacity: 0.88;
+    transform: scaleX(0.92);
+  }
+  100% {
+    height: 42px;
+    opacity: 1;
+    transform: scaleX(1.08);
+  }
+}
+
+@keyframes glow-flicker {
+  0% { opacity: 0.5; }
+  100% { opacity: 0.9; }
+}
+
+@keyframes dust-spread-left {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(-30px, -10px) scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes dust-spread-right {
+  0% {
+    transform: translate(0, 0) scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translate(30px, -10px) scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes radar-pulse {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+/* ==========================================================================
+   Responsive Adaptations (Tablet & Mobile)
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .luna-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .luna-stage {
+    height: 460px;
+  }
+}
+
+@media (max-width: 768px) {
+  .luna-landing-container {
+    padding: 16px 12px 36px;
+    gap: 16px;
+  }
+
+  .luna-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .luna-header-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .celestial-hud {
+    flex-direction: column;
+    gap: 8px;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .celestial-card {
+    padding: 6px 10px;
+  }
+
+  .altitude-tape-overlay {
+    display: none; /* Hide dense HUD lines on small mobile screens */
+  }
+
+  .luna-stage {
+    height: 380px;
+  }
+
+  .telemetry-metrics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dynamic-telemetry-row {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-button-group {
+    flex-direction: row;
+  }
+
+  .control-btn {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .telemetry-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-button-group {
+    flex-direction: column;
+  }
+
+  .target-callout {
+    display: none; /* Keep target visual clean on tiny screens */
+  }
+}
+
