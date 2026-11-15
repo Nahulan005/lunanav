@@ -4,7 +4,6 @@ import { landingSites, demoAnalyses, initialRequest, type AnalysisRequest, type 
 import { analyzeMission, checkBackendHealth, fetchTerrainSample, isWithinLolaCoverage, type TerrainSampleResult } from './services/analysis'
 import { MetricCard } from './components/MetricCard'
 import { LunarMap } from './components/LunarMap'
-import { MissionTimeline } from './components/MissionTimeline'
 import { MissionHeader } from './components/MissionHeader'
 import { ScenarioComparison } from './components/ScenarioComparison'
 import { TerrainProvenancePanel } from './components/TerrainProvenancePanel'
@@ -12,6 +11,7 @@ import { SunEarthGeometryPanel, type GeometryPanelState } from './components/Sun
 import { Moon3DView } from './features/moon3d/Moon3DView'
 import { workspaceTabs, workspaceTabForHash } from './components/workspaceNavigation'
 import { AnalysisDerivation } from './components/AnalysisDerivation'
+import { ScheduleManager } from './components/ScheduleManager'
 
 function App() {
   const [workspaceHash, setWorkspaceHash] = useState(window.location.hash)
@@ -226,18 +226,18 @@ function App() {
           </> : <p className="unavailable-message">{terrainLoading ? 'Requesting a terrain sample.' : isOutOfCoverage ? 'Selected coordinates are outside local LOLA coverage.' : 'No matching local-derived terrain response is available.'} No substitute demo elevation is shown.</p>}
         </section>
       </section>}
-      {activeTab === 'schedule' && <section className="workspace-view" data-workspace-page="schedule" aria-label="Mission Schedule">
-        <div className="workspace-section-label"><span>MISSION SCHEDULE</span><p>Date configuration · real windows unavailable</p></div>
-        <form className="panel schedule-controls" onSubmit={handleAnalyze}>
-          <h2><Clock3 size={17} />Configure the planning date</h2>
-              <label htmlFor="landing-date">Landing date <span>UTC</span></label>
-              <input id="landing-date" type="date" disabled={loading} required value={request.landingDate} onChange={(e) => setRequest({ ...request, landingDate: e.target.value })} />
-          <p className="unavailable-message"><strong>Real schedule windows unavailable.</strong> No terrain-aware illumination or geometric visibility windows have been calculated. Point-in-time directions do not establish a schedule.</p>
-          <p>Changing this UTC date updates geometry inputs. Analyze Mission retains the existing demo analysis behavior.</p>
-          <button type="submit" className="analyze-button" disabled={loading}>{loading ? 'Analyzing…' : 'Analyze Mission'}</button>
-        </form>
-        <details className="panel demo-timeline"><summary>Optional demo timeline · fixed illustrative periods</summary><MissionTimeline date={analyzedRequest.landingDate} /></details>
-      </section>}
+      {activeTab === 'schedule' && (
+        <ScheduleManager
+          request={request}
+          siteName={selected.name}
+          geometry={currentGeometry}
+          loading={loading}
+          onDateChange={(landingDate) =>
+            setRequest((current) => ({ ...current, landingDate }))
+          }
+          onAnalyze={handleAnalyze}
+        />
+      )}
       {activeTab === 'coverage' && <section className="workspace-view" data-workspace-page="coverage" aria-label="Data and Coverage">
         <div className="workspace-section-label"><span>DATA &amp; COVERAGE</span><p>Provenance, coverage boundaries, and unresolved data</p></div>
       {terrainSample && terrainResult ? (
