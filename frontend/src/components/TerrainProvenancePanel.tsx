@@ -13,7 +13,7 @@ export function TerrainProvenancePanel({ result, loading, siteName }: TerrainPro
   const productName = `${sample.product_name} (${sample.product_version})`
   const elevation = `${sample.elevation_value.toFixed(1)}`
   const units = sample.units
-  const coordinateUsed = `${sample.coordinate_used.latitude.toFixed(3)}° N, ${sample.coordinate_used.longitude.toFixed(3)}° E`
+  const coordinateUsed = `${sample.coordinate_used.latitude.toFixed(3)}° latitude, ${sample.coordinate_used.longitude.toFixed(3)}° east longitude`
   const validationStatus = sample.validation.status
 
   return (
@@ -61,7 +61,7 @@ export function TerrainProvenancePanel({ result, loading, siteName }: TerrainPro
         <div className="provenance-field">
           <span className="field-label">Units</span>
           <strong className="field-value">
-            {units} <span className="units-note">(relative to 1737.4 km radius)</span>
+            {units} <span className="units-note">(relative to {sample.reference_radius_m} m radius)</span>
           </strong>
         </div>
 
@@ -79,6 +79,13 @@ export function TerrainProvenancePanel({ result, loading, siteName }: TerrainPro
         </div>
       </div>
 
+      <dl className="provider-facts">
+        <div><dt>Source URL</dt><dd>{sample.source_url}</dd></div>
+        <div><dt>Coordinate frame / reference</dt><dd>{sample.coordinate_reference_system}</dd></div>
+        <div><dt>Nodata interpretation</dt><dd>{sample.nodata_status}</dd></div>
+        <div><dt>Subset SHA-256</dt><dd>{sample.subset_checksum}</dd></div>
+      </dl>
+      <details><summary>Product limitations</summary><ul>{sample.limitations.map((text, index) => <li key={index}>{text}</li>)}</ul></details>
       <div className="terrain-disclaimer">
         <ul className="terrain-limitations-list">
           <li>Real LOLA terrain available only for the current local coverage region.</li>
