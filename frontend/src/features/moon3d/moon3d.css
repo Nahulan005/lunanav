@@ -10,6 +10,12 @@
 .screening-details caption { text-align: left; padding: 10px; color: #caddeb; }
 .screening-details summary { cursor: pointer; padding: 10px 0; color: #97d6ef; }
 .screening-checksum { overflow-wrap: anywhere; }
+.screening-decision-banner { padding: 16px; margin: 12px 0 18px; border: 1px solid #8395a8; border-left: 4px solid #c5d2de; border-radius: 6px; background: #203044; }
+.screening-decision-banner strong { display: block; font-size: 16px; line-height: 1.5; color: #f0f6fc; overflow-wrap: anywhere; }
+.screening-decision-banner span { font-size: 12px; font-weight: 600; color: #d4e0eb; }
+.screening-source-available, .screening-source-missing { display: inline-block; padding: 4px 7px; margin-bottom: 5px; border: 1px solid #54768a; border-radius: 4px; }
+.screening-source-available { color: #a6e9ff; background: #123547; }
+.screening-source-missing { color: #d6dde6; background: #2b3542; }
 .screening-coordinate-controls { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 12px; }
 .screening-coordinate-controls label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; flex: 1; min-width: 170px; }
 .screening-coordinate-controls input { width: 100%; }
