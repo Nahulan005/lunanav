@@ -1,0 +1,647 @@
+{
+  "$defs": {
+    "CoverageBounds": {
+      "additionalProperties": false,
+      "description": "Axis-aligned bounds in coordinate_system units; never implicitly lat/lon.",
+      "properties": {
+        "min_x": {
+          "title": "Min X",
+          "type": "number"
+        },
+        "min_y": {
+          "title": "Min Y",
+          "type": "number"
+        },
+        "max_x": {
+          "title": "Max X",
+          "type": "number"
+        },
+        "max_y": {
+          "title": "Max Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "min_x",
+        "min_y",
+        "max_x",
+        "max_y"
+      ],
+      "title": "CoverageBounds",
+      "type": "object"
+    },
+    "CoverageCell": {
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "minimum": 0,
+          "title": "Row",
+          "type": "integer"
+        },
+        "column": {
+          "minimum": 0,
+          "title": "Column",
+          "type": "integer"
+        },
+        "bounds": {
+          "$ref": "#/$defs/CoverageBounds",
+          "description": "Verified source-frame bounds; no cell may be placed without verified alignment."
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Documented coverage value only; not elevation or suitability.",
+          "title": "Value"
+        },
+        "value_unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value Unit"
+        },
+        "observation_status": {
+          "enum": [
+            "observed",
+            "unobserved",
+            "nodata",
+            "unverified"
+          ],
+          "title": "Observation Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "row",
+        "column",
+        "bounds",
+        "value",
+        "value_unit",
+        "observation_status"
+      ],
+      "title": "CoverageCell",
+      "type": "object"
+    },
+    "CoverageCoordinateSystem": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "default": "unverified",
+          "enum": [
+            "unverified",
+            "verified"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "frame": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frame"
+        },
+        "crs_wkt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Crs Wkt"
+        },
+        "projection": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Projection"
+        },
+        "coordinate_units": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coordinate Units"
+        },
+        "axis_order": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Axis Order"
+        },
+        "reference_surface": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reference Surface"
+        },
+        "pixel_registration": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pixel Registration"
+        },
+        "affine_transform": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 6,
+              "minItems": 6,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "GDAL geotransform order: x origin, column x step, row x step, y origin, column y step, row y step.",
+          "title": "Affine Transform"
+        },
+        "lat_lon_transform_verified": {
+          "default": false,
+          "title": "Lat Lon Transform Verified",
+          "type": "boolean"
+        }
+      },
+      "title": "CoverageCoordinateSystem",
+      "type": "object"
+    },
+    "CoverageLegendEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "observed",
+            "unobserved",
+            "nodata",
+            "unverified"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "color": {
+          "title": "Color",
+          "type": "string"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "label",
+        "color",
+        "symbol"
+      ],
+      "title": "CoverageLegendEntry",
+      "type": "object"
+    },
+    "CoverageResolution": {
+      "additionalProperties": false,
+      "properties": {
+        "x_spacing": {
+          "exclusiveMinimum": 0,
+          "title": "X Spacing",
+          "type": "number"
+        },
+        "y_spacing": {
+          "exclusiveMinimum": 0,
+          "title": "Y Spacing",
+          "type": "number"
+        },
+        "units": {
+          "title": "Units",
+          "type": "string"
+        },
+        "rows": {
+          "exclusiveMinimum": 0,
+          "title": "Rows",
+          "type": "integer"
+        },
+        "columns": {
+          "exclusiveMinimum": 0,
+          "title": "Columns",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "x_spacing",
+        "y_spacing",
+        "units",
+        "rows",
+        "columns"
+      ],
+      "title": "CoverageResolution",
+      "type": "object"
+    },
+    "CoverageSource": {
+      "additionalProperties": false,
+      "properties": {
+        "instrument": {
+          "default": "NASA LRO / LOLA",
+          "title": "Instrument",
+          "type": "string"
+        },
+        "instrument_url": {
+          "default": "https://science.nasa.gov/mission/lro/lola/",
+          "title": "Instrument Url",
+          "type": "string"
+        },
+        "expected_product": {
+          "default": "Site04_ldec.tif",
+          "title": "Expected Product",
+          "type": "string"
+        },
+        "product_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Product Url"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "metadata_inspected": {
+          "default": false,
+          "title": "Metadata Inspected",
+          "type": "boolean"
+        },
+        "processing_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Processing Version"
+        },
+        "validation": {
+          "default": "not-inspected",
+          "enum": [
+            "not-inspected",
+            "provisional",
+            "ingestion-checked"
+          ],
+          "title": "Validation",
+          "type": "string"
+        },
+        "checks_completed": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Checks Completed",
+          "type": "array"
+        }
+      },
+      "title": "CoverageSource",
+      "type": "object"
+    },
+    "CoverageSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "default": "unavailable",
+          "enum": [
+            "unavailable",
+            "provisional",
+            "available"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "total_pixel_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Total Pixel Count"
+        },
+        "valid_pixel_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Valid Pixel Count"
+        },
+        "observed_pixel_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Observed Pixel Count"
+        },
+        "nodata_pixel_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodata Pixel Count"
+        },
+        "unverified_pixel_count": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unverified Pixel Count"
+        },
+        "coverage_percentage": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Coverage Percentage"
+        },
+        "percentage_definition": {
+          "default": "100 * observed_pixel_count / valid_pixel_count within returned bounds; null when denominator is zero or semantics are unverified.",
+          "title": "Percentage Definition",
+          "type": "string"
+        },
+        "observation_rule": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Must come from inspected product documentation; no positive-value rule is assumed.",
+          "title": "Observation Rule"
+        }
+      },
+      "title": "CoverageSummary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "status": {
+      "default": "unavailable",
+      "enum": [
+        "unavailable",
+        "provisional",
+        "available"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "layer": {
+      "const": "observation_coverage",
+      "default": "observation_coverage",
+      "title": "Layer",
+      "type": "string"
+    },
+    "site_id": {
+      "const": "Site04",
+      "default": "Site04",
+      "title": "Site Id",
+      "type": "string"
+    },
+    "detail": {
+      "title": "Detail",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/CoverageSource"
+    },
+    "coordinate_system": {
+      "$ref": "#/$defs/CoverageCoordinateSystem"
+    },
+    "value_unit": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value Unit"
+    },
+    "native_resolution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CoverageResolution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "returned_resolution": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CoverageResolution"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "source_bounds": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CoverageBounds"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "returned_bounds": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CoverageBounds"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "nodata_value": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Null with nodata_status=unverified means unknown, not an assertion of no nodata.",
+      "title": "Nodata Value"
+    },
+    "nodata_status": {
+      "default": "unverified",
+      "enum": [
+        "unverified",
+        "declared-sentinel",
+        "mask-defined",
+        "no-sentinel-declared"
+      ],
+      "title": "Nodata Status",
+      "type": "string"
+    },
+    "summary": {
+      "$ref": "#/$defs/CoverageSummary"
+    },
+    "cells": {
+      "items": {
+        "$ref": "#/$defs/CoverageCell"
+      },
+      "maxItems": 4096,
+      "title": "Cells",
+      "type": "array"
+    },
+    "max_returned_cells": {
+      "const": 4096,
+      "default": 4096,
+      "title": "Max Returned Cells",
+      "type": "integer"
+    },
+    "legend": {
+      "items": {
+        "$ref": "#/$defs/CoverageLegendEntry"
+      },
+      "title": "Legend",
+      "type": "array"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "detail",
+    "limitations"
+  ],
+  "title": "Site04CoverageResponse",
+  "type": "object"
+}
