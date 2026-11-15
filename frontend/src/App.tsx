@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
+import { ScheduleManager } from './components/ScheduleManager'
 import { ArrowRight, ChevronDown, Clock3, Compass, FlaskConical, Globe2, Info, LoaderCircle, MapPin, Moon, Orbit, Radio, Rocket, ShieldCheck, Sun, Mountain } from 'lucide-react'
 import { landingSites, demoAnalyses, initialRequest, type AnalysisRequest, type LandingSite } from './data/mockData'
 import { analyzeMission, checkBackendHealth, fetchTerrainSample, isWithinLolaCoverage, type TerrainSampleResult } from './services/analysis'
@@ -22,7 +23,7 @@ function App() {
     return () => window.removeEventListener('hashchange', navigate)
   }, [])
   useEffect(() => {
-    const targets = ['#planner', '#site-analysis', '#scenarios', '#timeline', '#landing-3d']
+    const targets = ['#planner', '#site-analysis', '#scenarios', '#timeline', '#schedule-manager','#landing-3d']
     if (!targets.includes(workspaceHash)) return
     const frame = requestAnimationFrame(() => document.getElementById(workspaceHash.slice(1))?.scrollIntoView())
     return () => cancelAnimationFrame(frame)
@@ -235,6 +236,11 @@ function App() {
       <MissionDecision analysis={analysis} analyzedRequest={analyzedRequest} request={request}
         siteName={analyzedSite.name} terrain={terrainResult} terrainLoading={terrainLoading} geometry={geometryState} />
       <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={setGeometryState} />
+      <ScheduleManager
+  request={request}
+  siteName={selected.name}
+  geometryState={geometryState}
+/>
       <MissionTimeline date={analyzedRequest.landingDate} />
       <ScenarioComparison selectedId={selectedScenarioId} disabled={loading} onSelect={(site) => { setSelectedScenarioId(site.id); selectSite(site) }} />
       <footer>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Box, CalendarDays, ChevronRight, Compass, Orbit } from 'lucide-react'
+import { Box, ChevronRight, Compass, Orbit } from 'lucide-react'
 
 interface MissionHeaderProps {
   loading: boolean
@@ -26,6 +26,7 @@ export function MissionHeader({ loading, dirty, date, backendConnected, isOutOfC
     { label: 'Site Analysis', target: '#site-analysis' },
     { label: 'Compare Scenarios', target: '#scenarios' },
     { label: 'Mission Timeline', target: '#timeline' },
+    { label: 'Schedule Manager', target: '#schedule-manager' },
   ]
 
   const isConnectedAndInCoverage = backendConnected && !isOutOfCoverage
@@ -41,7 +42,6 @@ export function MissionHeader({ loading, dirty, date, backendConnected, isOutOfC
         <a className="brand" href="#planner" aria-label="LunaNav home"><span className="brand-orbit"><Orbit size={28} /></span>LUNA<span>NAV</span></a>
         <nav aria-label="Mission workspace">
           {links.map(({ label, target }) => <a key={label} href={target} className={active === label ? 'active' : ''} onClick={() => setActive(label)} aria-current={active === label ? 'location' : undefined}>{label}</a>)}
-          <button disabled title="Planned feature"><CalendarDays size={12} />Schedule Analyzer<span className="planned-label">PLANNED</span></button>
           <a href="#landing-3d" className={active === '3D Landing' ? 'active' : ''} onClick={() => setActive('3D Landing')} aria-current={active === '3D Landing' ? 'location' : undefined}><Box size={12} />3D Landing<span className="planned-label">DEMO</span></a>
         </nav>
         <span className={`workspace-badge ${isConnectedAndInCoverage ? 'connected' : 'fallback'}`} role="status">
