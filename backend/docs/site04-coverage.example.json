@@ -1,0 +1,72 @@
+{
+  "schema_version": "1.0",
+  "status": "unavailable",
+  "layer": "observation_coverage",
+  "site_id": "Site04",
+  "detail": "Site04 LDEC ingestion is not enabled; TIFF metadata and observation semantics have not been inspected.",
+  "source": {
+    "instrument": "NASA LRO / LOLA",
+    "instrument_url": "https://science.nasa.gov/mission/lro/lola/",
+    "expected_product": "Site04_ldec.tif",
+    "product_url": null,
+    "sha256": null,
+    "metadata_inspected": false,
+    "processing_version": null,
+    "validation": "not-inspected",
+    "checks_completed": []
+  },
+  "coordinate_system": {
+    "status": "unverified",
+    "frame": null,
+    "crs_wkt": null,
+    "projection": null,
+    "coordinate_units": null,
+    "axis_order": null,
+    "reference_surface": null,
+    "pixel_registration": null,
+    "affine_transform": null,
+    "lat_lon_transform_verified": false
+  },
+  "value_unit": null,
+  "native_resolution": null,
+  "returned_resolution": null,
+  "source_bounds": null,
+  "returned_bounds": null,
+  "nodata_value": null,
+  "nodata_status": "unverified",
+  "summary": {
+    "status": "unavailable",
+    "total_pixel_count": null,
+    "valid_pixel_count": null,
+    "observed_pixel_count": null,
+    "nodata_pixel_count": null,
+    "unverified_pixel_count": null,
+    "coverage_percentage": null,
+    "percentage_definition": "100 * observed_pixel_count / valid_pixel_count within returned bounds; null when denominator is zero or semantics are unverified.",
+    "observation_rule": null
+  },
+  "cells": [],
+  "max_returned_cells": 4096,
+  "legend": [
+    {
+      "status": "unverified",
+      "label": "Unknown / unverified",
+      "color": "#8899aa",
+      "symbol": "?"
+    },
+    {
+      "status": "nodata",
+      "label": "Missing data",
+      "color": "#8899aa",
+      "symbol": "-"
+    }
+  ],
+  "limitations": [
+    "No verified Site04 TIFF metadata, source checksum, coordinate frame, pixel registration, resolution, coverage bounds, or nodata interpretation is available to this endpoint.",
+    "Observation-value units and the rule distinguishing observed from unobserved pixels require official product documentation; no threshold is assumed.",
+    "Renderer blocker: latitude/longitude cell locations cannot be supplied until the source transform and lunar frame conversion are verified.",
+    "No cells are returned. Missing and unverified data must render grey; never interpolate gaps or substitute demo fixtures.",
+    "Observation coverage is not elevation, landing suitability, risk, a safety rating, or a recommendation.",
+    "Future implementation must read bounded windows and return at most 4096 cells; current response contains no source data."
+  ]
+}

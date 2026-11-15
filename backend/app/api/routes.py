@@ -13,6 +13,7 @@ from app.providers.mock import (
 )
 from app.schemas.analysis import AnalysisRequest, AnalysisResponse, HealthResponse
 from app.schemas.geometry import SunEarthGeometryResponse
+from app.schemas.site04_coverage import Site04CoverageResponse
 from app.schemas.terrain import TerrainProfile, TerrainSampleResponse
 from app.services.analysis import AnalysisService
 
@@ -151,4 +152,20 @@ def get_sun_earth_geometry(
         longitude=longitude,
         target_date=target_date,
         observer_height_m=observer_height_m,
+    )
+
+@router.get("/terrain/site04/coverage", response_model=Site04CoverageResponse,
+            summary="Site04 observation coverage (unavailable pending metadata inspection)")
+def site04_observation_coverage() -> Site04CoverageResponse:
+    """Contract-only handoff: no file reads, generated cells, or inferred transforms."""
+    return Site04CoverageResponse(
+        detail="Site04 LDEC ingestion is not enabled; TIFF metadata and observation semantics have not been inspected.",
+        limitations=[
+            "No verified Site04 TIFF metadata, source checksum, coordinate frame, pixel registration, resolution, coverage bounds, or nodata interpretation is available to this endpoint.",
+            "Observation-value units and the rule distinguishing observed from unobserved pixels require official product documentation; no threshold is assumed.",
+            "Renderer blocker: latitude/longitude cell locations cannot be supplied until the source transform and lunar frame conversion are verified.",
+            "No cells are returned. Missing and unverified data must render grey; never interpolate gaps or substitute demo fixtures.",
+            "Observation coverage is not elevation, landing suitability, risk, a safety rating, or a recommendation.",
+            "Future implementation must read bounded windows and return at most 4096 cells; current response contains no source data.",
+        ],
     )
