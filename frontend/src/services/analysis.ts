@@ -1,9 +1,11 @@
 import { demoAnalyses, type AnalysisRequest, type DemoAnalysis } from '../data/mockData'
+import type { Site04CoverageResponse } from '../features/moon3d/terrainGrid'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
 export const HEALTH_ENDPOINT = `${API_BASE_URL}/api/v1/health`
 export const ANALYSIS_ENDPOINT = `${API_BASE_URL}/api/v1/analysis`
 export const TERRAIN_SAMPLE_ENDPOINT = `${API_BASE_URL}/api/v1/terrain/sample`
+export const SITE04_COVERAGE_ENDPOINT = `${API_BASE_URL}/api/v1/terrain/site04/coverage`
 
 // Short timeout to ensure offline fallback happens immediately without waiting
 const REQUEST_TIMEOUT_MS = 2000
@@ -229,6 +231,22 @@ export async function fetchTerrainSample(latitude: number, longitude: number): P
       isFallback: false,
       isOutOfCoverage: false,
     }
+  } catch {
+    return null
+  }
+}
+export async function fetchSite04Coverage(): Promise<Site04CoverageResponse | null> {
+  try {
+    const res = await fetchWithTimeout(SITE04_COVERAGE_ENDPOINT, {
+      method: 'GET',
+    })
+
+    if (!res.ok) {
+      return null
+    }
+
+    const data: Site04CoverageResponse = await res.json()
+    return data
   } catch {
     return null
   }
