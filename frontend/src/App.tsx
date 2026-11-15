@@ -12,10 +12,12 @@ import { Moon3DView } from './features/moon3d/Moon3DView'
 import { workspaceTabs, workspaceTabForHash } from './components/workspaceNavigation'
 import { AnalysisDerivation } from './components/AnalysisDerivation'
 import { ScheduleManager } from './components/ScheduleManager'
+import LandingVisualization from './features/landing/LandingVisualization'
 
 function App() {
   const [workspaceHash, setWorkspaceHash] = useState(window.location.hash)
   const showMoon3D = workspaceHash === '#/landing-3d' || workspaceHash === '#landing-3d'
+  const showLandingDemo = workspaceHash === '#/landing-demo'
   const activeTab = workspaceTabForHash(workspaceHash)
   useEffect(() => {
     const navigate = () => setWorkspaceHash(window.location.hash)
@@ -24,11 +26,11 @@ function App() {
   }, [])
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      document.getElementById(showMoon3D ? 'landing-3d' : 'workspace-content')?.focus({ preventScroll: true })
+      document.getElementById(showLandingDemo ? 'landing-demo' : showMoon3D ? 'landing-3d' : 'workspace-content')?.focus({ preventScroll: true })
       window.scrollTo({ top: 0, behavior: 'instant' })
     })
     return () => cancelAnimationFrame(frame)
-  }, [workspaceHash, showMoon3D])
+  }, [workspaceHash, showMoon3D, showLandingDemo])
   const [request, setRequest] = useState<AnalysisRequest>(initialRequest)
   const [analyzedRequest, setAnalyzedRequest] = useState(initialRequest)
   const [analysis, setAnalysis] = useState(demoAnalyses.shackleton)
@@ -134,7 +136,7 @@ function App() {
       backendConnected={backendConnected}
       isOutOfCoverage={isOutOfCoverage}
     />
-    {!showMoon3D && <main id="planner" className="planning-workspace">
+    {!showMoon3D && !showLandingDemo && <main id="planner" className="planning-workspace">
       <div className="page-heading">
         <div>
           <div className="eyebrow"><span />SELENOGRAPHIC OPERATIONS / PLANNING WORKSPACE</div>
@@ -301,6 +303,9 @@ function App() {
         <span><Orbit size={17} /><strong>LunaNav</strong><span className="footer-divider">/</span>A clearer path to the Moon.</span>
         <span><Globe2 size={13} />{statusLabel}</span>
       </footer>
+    </main>}
+    {showLandingDemo && <main id="landing-demo" tabIndex={-1}>
+      <LandingVisualization />
     </main>}
     {showMoon3D && <main id="landing-3d" tabIndex={-1}>
       <div className="page-heading">
