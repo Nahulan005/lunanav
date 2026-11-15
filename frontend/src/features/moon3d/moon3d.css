@@ -1,4 +1,19 @@
 /* Isolated 3D Lunar Visualization Component Styles for LunaNav */
+.screening-grid { position: absolute; inset: 0; pointer-events: none; }
+.screening-legend, .screening-details { padding: 16px; margin: 16px 0; background: #091b2c; border: 1px solid #496075; border-radius: 8px; }
+.screening-legend p, .screening-details p, .screening-details li { font-size: 12px; line-height: 1.7; color: #c1d1df; }
+.screening-symbols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.screening-symbols span { padding: 10px; border: 1px solid currentColor; font-size: 12px; border-radius: 4px; }
+.screen-pass { color: #83e5bc; } .screen-review { color: #ffd082; } .screen-fail { color: #ff9aa9; } .screen-unknown { color: #e1e5eb; background: repeating-linear-gradient(45deg, #283544, #283544 6px, #344253 6px, #344253 8px); }
+.screening-details table { min-width: 680px; width: 100%; font-size: 12px; }
+.screening-details td, .screening-details th { padding: 10px; text-align: left; white-space: normal; }
+.screening-details caption { text-align: left; padding: 10px; color: #caddeb; }
+.screening-details summary { cursor: pointer; padding: 10px 0; color: #97d6ef; }
+.screening-checksum { overflow-wrap: anywhere; }
+.screening-coordinate-controls { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 12px; }
+.screening-coordinate-controls label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; flex: 1; min-width: 170px; }
+.screening-coordinate-controls input { width: 100%; }
+@media (max-width: 640px) { .screening-symbols { grid-template-columns: 1fr; } .screening-details { padding: 10px; } }
 
 .moon3d-panel {
   position: relative;

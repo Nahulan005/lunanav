@@ -251,7 +251,7 @@ function App() {
         <FlaskConical size={17} />
         <p><strong>ILLUSTRATIVE DEMO</strong> All 3D values, terrain detail, and heatmaps are demo fixtures, separate from the dashboard's backend results. No validated spatial coverage or landing-safety assessment.</p>
       </div>
-      <Moon3DView initialSelectedId={request.siteId} />
+      <Moon3DView initialSelectedId={request.siteId} date={request.landingDate} />
     </main>}
   </>
 }

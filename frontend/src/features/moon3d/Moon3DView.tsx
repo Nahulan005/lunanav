@@ -26,6 +26,7 @@ import {
   type Moon3DLandingSite,
 } from './moon3dMockData'
 import './moon3d.css'
+import { ScreeningDetails, type SurfaceLocation } from './ScreeningDetails'
 
 interface ProjectedCoords {
   x: number
@@ -81,13 +82,18 @@ function projectPoint(
   return { x: x2, y: y2, z: z2, screenX, screenY, visible, scale, opacity }
 }
 
-export function Moon3DView({ initialSelectedId }: { initialSelectedId?: string }) {
+export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initialSelectedId?: string; date?: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const stageRef = useRef<HTMLDivElement | null>(null)
 
   const [rotX, setRotX] = useState<number>(DEFAULT_ROT_X)
   const [rotY, setRotY] = useState<number>(DEFAULT_ROT_Y)
-  const [autoRotate, setAutoRotate] = useState<boolean>(true)
+  const [autoRotate, setAutoRotate] = useState<boolean>(false)
+  const [screening, setScreening] = useState(true)
+  const [surface, setSurface] = useState<SurfaceLocation>(() => {
+    const site = MOON3D_LANDING_SITES.find((item) => item.id === initialSelectedId)
+    return { latitude: site?.latitude ?? 0, longitude: site?.longitude ?? 0 }
+  })
   const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('none')
   const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
     initialSelectedId ?? 'shackleton'
@@ -386,7 +392,7 @@ export function Moon3DView({ initialSelectedId }: { initialSelectedId?: string }
     ctx.restore()
 
     // 7. Illustrative Heatmap Overlay (if active)
-    if (heatmapMode !== 'none') {
+    if (!screening && heatmapMode !== 'none') {
       ctx.save()
       ctx.globalAlpha = 0.52
 
@@ -491,7 +497,7 @@ export function Moon3DView({ initialSelectedId }: { initialSelectedId?: string }
     ctx.restore()
 
     ctx.restore() // Undo base save
-  }, [dimensions, rotX, rotY, heatmapMode])
+  }, [dimensions, rotX, rotY, heatmapMode, screening])
 
   useEffect(() => {
     drawMoon()
@@ -563,12 +569,44 @@ export function Moon3DView({ initialSelectedId }: { initialSelectedId?: string }
       return // Ignore accidental click triggered during rotation drag
     }
     setSelectedSiteId((prev) => (prev === site.id ? null : site.id))
+    setSurface({ latitude: site.latitude, longitude: site.longitude })
+    setAutoRotate(false)
   }
 
   // Pre-calculate 3D projected marker coordinates for overlay buttons
   const cx = dimensions.width / 2
   const cy = dimensions.height / 2
   const radius = dimensions.width * 0.44
+  const surfaceClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (hasMovedSignificantlyRef.current || (event.target as HTMLElement).closest('button')) return
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const x = ((event.clientX - rect.left) * dimensions.width / rect.width - cx) / radius
+    const y = ((event.clientY - rect.top) * dimensions.height / rect.height - cy) / radius
+    if (x * x + y * y > 1) return
+    const z = Math.sqrt(Math.max(0, 1 - x * x - y * y))
+    const y1 = y * Math.cos(rotX) + z * Math.sin(rotX)
+    const z1 = -y * Math.sin(rotX) + z * Math.cos(rotX)
+    const x0 = x * Math.cos(rotY) - z1 * Math.sin(rotY)
+    const z0 = x * Math.sin(rotY) + z1 * Math.cos(rotY)
+    setSurface({ latitude: Math.asin(Math.max(-1, Math.min(1, -y1))) * 180 / Math.PI, longitude: Math.atan2(x0, z0) * 180 / Math.PI })
+    setAutoRotate(false)
+  }
+  const surfaceProjection = projectPoint(surface.latitude, surface.longitude, rotX, rotY, radius, cx, cy)
+  const gridPaths: string[] = []
+  for (let lat = -90; lat < 90; lat += 15) for (let lon = -180; lon < 180; lon += 15) {
+    const points: string[] = []
+    let visible = true
+    for (let edge = 0; edge < 4; edge++) for (let step = 0; step <= 5; step++) {
+      const t = step / 5
+      const a = edge === 0 ? lat : edge === 1 ? lat + 15 * t : edge === 2 ? lat + 15 : lat + 15 * (1 - t)
+      const b = edge === 0 ? lon + 15 * t : edge === 1 ? lon + 15 : edge === 2 ? lon + 15 * (1 - t) : lon
+      const p = projectPoint(a, b, rotX, rotY, radius, cx, cy)
+      if (p.z < 0) visible = false
+      points.push(`${p.screenX},${p.screenY}`)
+    }
+    if (visible) gridPaths.push(points.join(' '))
+  }
 
   const projectedSites = MOON3D_LANDING_SITES.map((site) => ({
     site,
@@ -616,6 +654,18 @@ export function Moon3DView({ initialSelectedId }: { initialSelectedId?: string }
       </div>
 
       {/* Heatmap Mode Selector Bar */}
+      <div className="screening-legend">
+        <strong>Illustrative/demo only · Combined classification unavailable</strong>
+        <p>Real/model-derived: point data in selected-location details. Planned: validated spatial suitability. Mock: optional decorative layers and preset inspector below.</p>
+        <div className="screening-symbols"><span className="screen-pass">✓ GREEN · all configured requirements pass with margin</span><span className="screen-review">! ORANGE · near threshold / non-critical issue</span><span className="screen-fail">✕ RED · mandatory requirement failed</span><span className="screen-unknown">? GREY · missing / insufficient data (all current zones)</span></div>
+        <p>Legend definitions are planned evaluation rules. No current zone has the required validated data; all remain ?. Boundaries show geographic display cells, not a calculated heatmap.</p>
+        <button type="button" className="moon3d-mode-button" onClick={() => setScreening(!screening)} aria-pressed={screening}>{screening ? 'Screening cells · ? Unknown' : 'Decorative demo layers · no calculated risk'}</button>
+        <p>Click any visible surface point to inspect it; drag to rotate. Coordinate selection is also available below. Optional color layers and the preset inspector are illustrative fixtures, never calculated screening results.</p>
+        <div className="screening-coordinate-controls">
+          <label>Selected latitude (°)<input type="number" min="-90" max="90" step="any" value={surface.latitude} onChange={(e) => { const n = e.target.valueAsNumber; if (Number.isFinite(n) && Math.abs(n) <= 90) { setSurface({ ...surface, latitude: n }); setAutoRotate(false) } }} /></label>
+          <label>Selected east longitude (°)<input type="number" min="-180" max="180" step="any" value={surface.longitude} onChange={(e) => { const n = e.target.valueAsNumber; if (Number.isFinite(n) && Math.abs(n) <= 180) { setSurface({ ...surface, longitude: n }); setAutoRotate(false) } }} /></label>
+        </div>
+      </div>
       <div className="moon3d-mode-bar" role="toolbar" aria-label="Heatmap overlay modes">
         <span className="moon3d-mode-label">
           <Layers size={13} />
@@ -673,10 +723,17 @@ export function Moon3DView({ initialSelectedId }: { initialSelectedId?: string }
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
+            onClick={surfaceClick}
             role="region"
             aria-label="Interactive 3D Moon sphere. Drag with mouse or finger to rotate."
           >
             <canvas ref={canvasRef} className="moon3d-canvas" />
+            <svg className="screening-grid" width={dimensions.width} height={dimensions.height} aria-hidden="true">
+              {screening && <><circle cx={cx} cy={cy} r={radius} fill="#8899aa" fillOpacity=".25" />
+                {gridPaths.map((points, i) => <polygon key={i} points={points} fill="none" stroke="#dee6ee" strokeOpacity=".65" strokeDasharray="3 2" />)}
+                {gridPaths.map((points, i) => { const [x, y] = points.split(' ')[12].split(','); return <text key={i} x={x} y={y} fill="#fff" fontSize="10">?</text> })}</>}
+              {surfaceProjection.visible && <g><circle cx={surfaceProjection.screenX} cy={surfaceProjection.screenY} r="7" fill="#0c2134" stroke="white" strokeWidth="2" /><text x={surfaceProjection.screenX + 10} y={surfaceProjection.screenY} fill="white">Selected ?</text></g>}
+            </svg>
 
             {/* Accessible Landing Site Markers Layer */}
             <div className="moon3d-markers-layer">
@@ -873,6 +930,7 @@ export function Moon3DView({ initialSelectedId }: { initialSelectedId?: string }
       </div>
 
       {/* Global Module Disclaimer */}
+      <ScreeningDetails key={`${surface.latitude},${surface.longitude},${date}`} location={surface} date={date} />
       <div className="moon3d-disclaimer-banner">
         <CheckCircle2 size={16} />
         <div>
