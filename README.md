@@ -1,4 +1,4 @@
-# PALIMPSEST (VEX-MORPH)
+#    LUNANAV
 
 > **The AI proposes. The math proves.**
 
