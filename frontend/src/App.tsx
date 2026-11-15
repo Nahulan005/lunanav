@@ -11,8 +11,22 @@ import { ScenarioComparison } from './components/ScenarioComparison'
 import { TerrainProvenancePanel } from './components/TerrainProvenancePanel'
 import { SunEarthGeometryPanel, type GeometryPanelState } from './components/SunEarthGeometryPanel'
 import { MissionDecision } from './components/MissionDecision'
+import { Moon3DView } from './features/moon3d/Moon3DView'
 
 function App() {
+  const [workspaceHash, setWorkspaceHash] = useState(window.location.hash)
+  const showMoon3D = workspaceHash === '#landing-3d'
+  useEffect(() => {
+    const navigate = () => setWorkspaceHash(window.location.hash)
+    window.addEventListener('hashchange', navigate)
+    return () => window.removeEventListener('hashchange', navigate)
+  }, [])
+  useEffect(() => {
+    const targets = ['#planner', '#site-analysis', '#scenarios', '#timeline', '#landing-3d']
+    if (!targets.includes(workspaceHash)) return
+    const frame = requestAnimationFrame(() => document.getElementById(workspaceHash.slice(1))?.scrollIntoView())
+    return () => cancelAnimationFrame(frame)
+  }, [workspaceHash])
   const [request, setRequest] = useState<AnalysisRequest>(initialRequest)
   const [analyzedRequest, setAnalyzedRequest] = useState(initialRequest)
   const [analysis, setAnalysis] = useState(demoAnalyses.shackleton)
@@ -115,7 +129,7 @@ function App() {
       backendConnected={backendConnected}
       isOutOfCoverage={isOutOfCoverage}
     />
-    <main id="planner">
+    <main id="planner" hidden={showMoon3D}>
       <div className="page-heading">
         <div>
           <div className="eyebrow"><span />SELENOGRAPHIC OPERATIONS / PLANNING WORKSPACE</div>
@@ -228,6 +242,17 @@ function App() {
         <span><Globe2 size={13} />{statusLabel}</span>
       </footer>
     </main>
+    {showMoon3D && <main id="landing-3d">
+      <div className="page-heading">
+        <div><h1>3D Landing</h1><p>Explore an illustrative lunar scene and demo landing-site comparisons.</p></div>
+        <a href="#planner">Return to dashboard</a>
+      </div>
+      <div className="demo-banner">
+        <FlaskConical size={17} />
+        <p><strong>ILLUSTRATIVE DEMO</strong> All 3D values, terrain detail, and heatmaps are demo fixtures, separate from the dashboard's backend results. No validated spatial coverage or landing-safety assessment.</p>
+      </div>
+      <Moon3DView initialSelectedId={request.siteId} />
+    </main>}
   </>
 }
 

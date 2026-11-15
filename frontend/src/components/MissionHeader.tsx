@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Box, CalendarDays, ChevronRight, Compass, Orbit } from 'lucide-react'
 
 interface MissionHeaderProps {
@@ -11,6 +11,16 @@ interface MissionHeaderProps {
 
 export function MissionHeader({ loading, dirty, date, backendConnected, isOutOfCoverage = false }: MissionHeaderProps) {
   const [active, setActive] = useState('Dashboard')
+  useEffect(() => {
+    const updateActive = () => setActive(({
+      '#planner': 'Dashboard', '#site-analysis': 'Site Analysis',
+      '#scenarios': 'Compare Scenarios', '#timeline': 'Mission Timeline',
+      '#landing-3d': '3D Landing',
+    } as Record<string, string>)[window.location.hash] ?? 'Dashboard')
+    updateActive()
+    window.addEventListener('hashchange', updateActive)
+    return () => window.removeEventListener('hashchange', updateActive)
+  }, [])
   const links = [
     { label: 'Dashboard', target: '#planner' },
     { label: 'Site Analysis', target: '#site-analysis' },
@@ -32,7 +42,7 @@ export function MissionHeader({ loading, dirty, date, backendConnected, isOutOfC
         <nav aria-label="Mission workspace">
           {links.map(({ label, target }) => <a key={label} href={target} className={active === label ? 'active' : ''} onClick={() => setActive(label)} aria-current={active === label ? 'location' : undefined}>{label}</a>)}
           <button disabled title="Planned feature"><CalendarDays size={12} />Schedule Analyzer<span className="planned-label">PLANNED</span></button>
-          <button disabled title="Planned feature"><Box size={12} />3D Landing<span className="planned-label">PLANNED</span></button>
+          <a href="#landing-3d" className={active === '3D Landing' ? 'active' : ''} onClick={() => setActive('3D Landing')} aria-current={active === '3D Landing' ? 'location' : undefined}><Box size={12} />3D Landing<span className="planned-label">DEMO</span></a>
         </nav>
         <span className={`workspace-badge ${isConnectedAndInCoverage ? 'connected' : 'fallback'}`} role="status">
           <i className={`status-light ${isConnectedAndInCoverage ? 'connected' : 'fallback'}`} />
