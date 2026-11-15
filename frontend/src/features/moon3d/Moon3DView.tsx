@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { fetchSite04Coverage } from '../../services/analysis'
+import type { Site04CoverageResponse } from './terrainGrid'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -100,6 +102,8 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
     width: 440,
     height: 440,
   })
+    const [site04Coverage, setSite04Coverage] = useState<Site04CoverageResponse | null>(null)
+  const [coverageLoading, setCoverageLoading] = useState(true)
 
   // Pointer drag state
   const isPointerDownRef = useRef(false)
@@ -115,6 +119,28 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
   const selectedSite = selection.kind === 'preset' ? selection.site : null
   const activeHeatmap = HEATMAP_CONFIGS[heatmapMode]
   const screening = heatmapMode === 'feasibility'
+  const coverageStatus = coverageLoading
+  ? 'Loading Site04 coverage...'
+  : site04Coverage
+    ? `Site04 coverage: ${site04Coverage.status ?? 'Unknown'}`
+    : 'Site04 coverage API unavailable'
+
+    // Fetch Site04 observation coverage from the backend
+  useEffect(() => {
+    let active = true
+
+    fetchSite04Coverage()
+      .then((data) => {
+        if (active) setSite04Coverage(data)
+      })
+      .finally(() => {
+        if (active) setCoverageLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
 
   // ResizeObserver for responsive canvas resolution
   useEffect(() => {
@@ -729,12 +755,31 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
         {/* Sidebar: Selected Site Inspector + Heatmap Legend */}
         <div className="moon3d-sidebar">
           <div className="moon3d-inspector" aria-live="polite">
-            <h3>{activeHeatmap.label}</h3>
-            <p className="moon3d-site-desc">Selected location: {surface.latitude.toFixed(4)}&deg; latitude / {surface.longitude.toFixed(4)}&deg; east longitude.</p>
-            <p className="moon3d-site-desc">{activeHeatmap.description}</p>
-            <p className="moon3d-site-desc">{activeHeatmap.disclaimer}</p>
-            <strong>Screening result: ? Grey / Unknown</strong>
-          </div>
+  <h3>{activeHeatmap.label}</h3>
+  <p className="moon3d-site-desc">Selected location: {surface.latitude.toFixed(4)}&deg; latitude / {surface.longitude.toFixed(4)}&deg; east longitude.</p>
+  <p className="moon3d-site-desc">{activeHeatmap.description}</p>
+  <p className="moon3d-site-desc">{activeHeatmap.disclaimer}</p>
+
+  <p className="moon3d-site-desc">
+  {coverageStatus}
+</p>
+
+{site04Coverage?.detail && (
+  <p className="moon3d-site-desc">
+    {site04Coverage.detail}
+  </p>
+)}
+
+{site04Coverage?.summary?.coverage_percentage != null && (
+  <p className="moon3d-site-desc">
+    Coverage: {site04Coverage.summary.coverage_percentage.toFixed(2)}%
+  </p>
+)}
+
+  <strong>Screening result: ? Grey / Unknown</strong>
+</div>
+
+
           <div className="moon3d-inspector" aria-live="polite">
             <h3>{selectedSite ? selectedSite.name : 'Selected surface location'}</h3>
             <strong>{selectedSite ? 'Demo preset · not calculated.' : 'Unknown · not enough data to determine.'}</strong>
