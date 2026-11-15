@@ -4,9 +4,9 @@ import { landingSites, moonCraters, type AnalysisRequest, type LandingSite } fro
 export function LunarMap({ selected, request, onSelect, disabled }: { selected: LandingSite; request: AnalysisRequest; onSelect: (site: LandingSite) => void; disabled: boolean }) {
   const coordinate = (value: number) => Number.isFinite(value) ? `${value.toFixed(2)}°` : '—'
   return <section className="panel lunar-map" aria-label="Illustrative lunar landing-site map">
-    <div className="map-top"><span><Orbit size={16} />LUNAR RECONNAISSANCE<span className="map-version">SURFACE VIEW / 01</span></span><span className="small-badge">CSS SCHEMATIC</span></div>
+    <div className="map-top"><span><Orbit size={16} />LUNAR SITE EXPLORER<span className="map-version">CONTEXT VIEW / 01</span></span><span className="small-badge">ILLUSTRATIVE SCHEMATIC</span></div>
     <div className="map-field">
-      <div className="map-hud left-hud"><span>SELENOGRAPHIC VIEW</span><strong>MOON / SOL III</strong><span>ILLUSTRATIVE GEOMETRY</span></div>
+      <div className="map-hud left-hud"><span>LUNAR SURFACE CONTEXT</span><strong>Explore a landing concept</strong><span>SELECT A PRESET TO CONFIGURE</span></div>
       <div className="map-hud right-hud"><ScanLine size={14} /><span>NO LIVE TELEMETRY</span></div>
       <div className="moon-stage">
         <div className="orbital-ring" /><div className="orbit-axis horizontal" /><div className="orbit-axis vertical" />
