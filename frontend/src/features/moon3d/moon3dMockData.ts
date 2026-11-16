@@ -62,25 +62,25 @@ export interface MareFeature {
 
 export const HEATMAP_CONFIGS: Record<HeatmapMode, HeatmapConfig> = {
   none: {
-    id: 'none', label: 'Natural Regolith ? illustrative', shortCode: 'SURF / DEMO',
+    id: 'none', label: 'Natural Regolith · illustrative', shortCode: 'SURF / DEMO',
     description: 'Neutral grayscale procedural surface. Brightness depicts decorative surface detail only.',
     disclaimer: 'No measured reflectance, elevation, or permanent-shadow classification.',
     stops: [{ label: 'Light gray', color: '#bcbcbc', description: 'Decorative bright terrain' }, { label: 'Dark gray', color: '#303030', description: 'Decorative maria and shading' }],
   },
   sunlight: {
-    id: 'sunlight', label: 'Sunlight Availability ? decorative demo', shortCode: 'SUN / DEMO',
-    description: 'Demo layer ? preset sites only. Amber nodes display existing fixed sunlight percentages; arbitrary surface points have no layer data.',
+    id: 'sunlight', label: 'Sunlight Availability · decorative demo', shortCode: 'SUN / DEMO',
+    description: 'Demo layer · preset sites only. Amber nodes display existing fixed sunlight percentages; arbitrary surface points have no layer data.',
     disclaimer: 'No illumination percentages, durations, terrain masking, or ephemeris-derived coverage are represented.',
     stops: [{ label: 'Amber preset node', color: '#ffd773', description: 'Existing sunlight fixture percentage; not calculated' }, { label: 'Unmarked surface', color: '#514022', description: 'No data for this layer' }],
   },
   'earth-visibility': {
-    id: 'earth-visibility', label: 'Earth Direct Line-of-Sight ? decorative demo', shortCode: 'EARTH / DEMO',
-    description: 'Demo layer ? preset sites only. Cyan nodes display existing fixed Earth-visibility percentages; arbitrary surface points have no layer data.',
+    id: 'earth-visibility', label: 'Earth Direct Line-of-Sight · decorative demo', shortCode: 'EARTH / DEMO',
+    description: 'Demo layer · preset sites only. Cyan nodes display existing fixed Earth-visibility percentages; arbitrary surface points have no layer data.',
     disclaimer: 'Shading does not establish geometric terrain clearance, visibility duration, or RF communications.',
     stops: [{ label: 'Cyan preset node', color: '#5ac9ed', description: 'Existing Earth-visibility fixture percentage; not calculated' }, { label: 'Unmarked surface', color: '#132b50', description: 'No data for this layer' }],
   },
   feasibility: {
-    id: 'feasibility', label: 'Landing Feasibility ? unavailable', shortCode: 'SCREEN / UNKNOWN',
+    id: 'feasibility', label: 'Landing Feasibility · unavailable', shortCode: 'SCREEN / UNKNOWN',
     description: 'Grey cells show unknown screening status. Dashed boundaries are display cells, not validated data coverage.',
     disclaimer: 'Required spatial grid, mandatory site-scale slope, terrain horizons, and configured thresholds are unavailable. No suitability score or safety assessment is computed.',
     stops: [{ label: '? GREY / Unknown', color: '#8899aa', description: 'Missing or insufficient required data; cannot classify as favorable' }],
@@ -122,7 +122,7 @@ export const MOON3D_LANDING_SITES: readonly Moon3DLandingSite[] = [
   },
   {
     id: 'apollo17',
-    name: 'Taurusâ€“Littrow Valley',
+    name: 'Taurus–Littrow Valley',
     region: 'Mare Serenitatis Border',
     latitude: 20.19,
     longitude: 30.77,
@@ -138,7 +138,7 @@ export const MOON3D_LANDING_SITES: readonly Moon3DLandingSite[] = [
   },
   {
     id: 'change5',
-    name: 'Mons RÃ¼mker / Changâ€™e 5',
+    name: 'Mons Rümker / Chang’e 5',
     region: 'Oceanus Procellarum',
     latitude: 43.06,
     longitude: -51.92,
@@ -147,7 +147,7 @@ export const MOON3D_LANDING_SITES: readonly Moon3DLandingSite[] = [
     earthVisibilityPct: 84,
     feasibilityScore: 78,
     terrainObstructionPct: 11,
-    historicalContext: 'Changâ€™e 5 Sample Return Site (2020)',
+    historicalContext: 'Chang’e 5 Sample Return Site (2020)',
     description:
       'Young volcanic dome mound in northern Oceanus Procellarum with vast smooth basalt plains and high titanium basalt signatures.',
     targetType: 'volcanic-dome',
@@ -197,7 +197,7 @@ export const MOON3D_LANDING_SITES: readonly Moon3DLandingSite[] = [
     terrainObstructionPct: 17,
     historicalContext: 'High-Albedo Pyroclastic Feature',
     description:
-      'Brightest large feature on the lunar nearside, hosting the sinuous rille Vallis SchrÃ¶teri and extensive pyroclastic glass deposits.',
+      'Brightest large feature on the lunar nearside, hosting the sinuous rille Vallis Schröteri and extensive pyroclastic glass deposits.',
     targetType: 'volcanic-dome',
   },
 ]

@@ -29,9 +29,10 @@ export function MissionHeader({ backendConnected }: MissionHeaderProps) {
       <div className="nav-inner">
         <a className="brand" href="#/overview" aria-label="LunaNav home"><span className="brand-orbit"><Orbit size={28} /></span>LUNA<span>NAV</span></a>
         <nav aria-label="Mission workspace">
-          {links.map(({ label, target }) => <a key={label} href={target} className={workspaceTabForHash(active) === workspaceTabForHash(target) && !active.includes('landing-3d') && active !== '#/landing-demo' ? 'active' : ''} aria-current={workspaceTabForHash(active) === workspaceTabForHash(target) && !active.includes('landing-3d') && active !== '#/landing-demo' ? 'page' : undefined}>{label}</a>)}
+          {links.map(({ label, target }) => <a key={label} href={target} className={workspaceTabForHash(active) === workspaceTabForHash(target) && !active.includes('landing-3d') && active !== '#/landing-demo' && active !== '#/adaptive-simulation' ? 'active' : ''} aria-current={workspaceTabForHash(active) === workspaceTabForHash(target) && !active.includes('landing-3d') && active !== '#/landing-demo' && active !== '#/adaptive-simulation' ? 'page' : undefined}>{label}</a>)}
           <a href="#/landing-3d" className={(active === '#/landing-3d' || active === '#landing-3d') ? 'active' : ''} aria-current={(active === '#/landing-3d' || active === '#landing-3d') ? 'page' : undefined}><Box size={12} />3D Landing<span className="planned-label">DEMO</span></a>
           <a href="#/landing-demo" className={active === '#/landing-demo' ? 'active' : ''} aria-current={active === '#/landing-demo' ? 'page' : undefined}>Landing Demo<span className="planned-label">MOCK</span></a>
+          <a href="#/adaptive-simulation" className={active === '#/adaptive-simulation' ? 'active' : ''} aria-current={active === '#/adaptive-simulation' ? 'page' : undefined}>Adaptive Simulation<span className="planned-label">DEMO</span></a>
         </nav>
         <span className={`workspace-badge ${isConnectedAndInCoverage ? 'connected' : 'fallback'}`} role="status">
           <i className={`status-light ${isConnectedAndInCoverage ? 'connected' : 'fallback'}`} />

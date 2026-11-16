@@ -8,7 +8,7 @@ const states: { status: ObservationStatus; label: string; symbol: string }[] = [
   { status: 'unverified', label: 'Unverified: invalid / unknown', symbol: '?' },
 ]
 
-export function Site04CoverageGrid({ data, loading }: { data: Site04CoverageResponse | null; loading: boolean }) {
+export function Site04CoverageGrid({ data, loading, error, onRetry }: { data: Site04CoverageResponse | null; loading: boolean; error?: string | null; onRetry?: () => void }) {
   const id = useId().replaceAll(':', '')
   const [selectedKey, setSelectedKey] = useState<string | null>(null)
   const selected = data?.cells.find(cell => `${cell.row}-${cell.column}` === selectedKey) ?? data?.cells[0]
@@ -20,6 +20,8 @@ export function Site04CoverageGrid({ data, loading }: { data: Site04CoverageResp
     <div className="site04-grid-heading"><h3 id={`${id}-title`}>Site04 observation coverage</h3><span role="status">API status: {loading ? 'loading' : data?.status ?? 'unavailable'}</span></div>
     <p>Separate projected X/Y view. No latitude/longitude transformation is verified, so these cells are never placed on the Moon globe. This is observation coverage only, not landing suitability or risk.</p>
     {data && <p>{data.detail}</p>}
+    {error && !loading && <p role="status">{error}</p>}
+    {onRetry && <button type="button" className="moon3d-mode-button" onClick={onRetry} disabled={loading}>{loading ? 'Requesting coverage…' : 'Retry coverage request'}</button>}
     {!drawable && <p className="site04-empty">{loading ? 'Requesting the bounded coverage window.' : !data ? 'Coverage API unavailable or response invalid. No demo substitute.' : 'No observation cells available to display. No demo substitute.'}</p>}
     {drawable && <div className="site04-grid-layout">
       <figure>

@@ -786,3 +786,6 @@
 .demo-risk-notice li { display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .demo-risk-notice li span { display: inline-grid; place-items: center; width: 26px; height: 26px; color: #07121d; font-weight: 800; border: 1px dashed white; border-radius: 4px; }
 .demo-risk-notice .demo-risk-grey { background: #8899aa; }
+
+.moon3d-webgl { position:absolute; inset:0; pointer-events:none; border-radius:50%; overflow:hidden; }
+.moon3d-renderer-status { font-size:11px; color:#a2b8c9; line-height:1.7; margin:12px 0; }
