@@ -39,6 +39,64 @@ def assert_health(data: dict) -> None:
     assert integrations == expected, "Health must distinguish local data from configured network capability"
 
 
+def verify_site04(client: TestClient) -> None:
+    """Check the pinned native grid and fail-closed behavior, without GIS/network."""
+    from collections import Counter
+    import hashlib
+    from unittest.mock import patch
+    import app.providers.site04_coverage as provider
+
+    response = client.get("/api/v1/terrain/site04/coverage")
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["status"] == "provisional", data["detail"]
+    assert data["layer"] == "observation_coverage"
+    assert data["source"]["metadata_inspected"] is True
+    assert data["source"]["validation"] == "provisional"
+    assert data["source"]["sha256"] == "fcc8c2219ae2368d5b2a1f6aec05fcf96cf725f3035ac8d80efc312a4ff29227"
+    assert hashlib.sha256(provider.ARTIFACT.read_bytes()).hexdigest() == provider.ARTIFACT_SHA256
+    assert data["coordinate_system"]["lat_lon_transform_verified"] is False
+    assert data["coordinate_system"]["coordinate_units"] == "m"
+    transform = data["coordinate_system"]["affine_transform"]
+    assert transform == [-9000, 5, 0, 1000, 0, -5]
+    assert data["returned_resolution"] == dict(x_spacing=5, y_spacing=5, units="m", rows=32, columns=32)
+    assert data["returned_bounds"] == dict(min_x=-1080, min_y=-7080, max_x=-920, max_y=-6920)
+    cells = data["cells"]
+    assert len(cells) == 1024 <= data["max_returned_cells"]
+    assert len({(c["row"], c["column"]) for c in cells}) == 1024
+    for c in cells:
+        row, col = c["row"], c["column"]
+        assert 1584 <= row <= 1615 and 1584 <= col <= 1615
+        assert c["bounds"] == dict(min_x=-9000 + col*5, max_x=-9000 + (col+1)*5,
+                                   min_y=1000 - (row+1)*5, max_y=1000 - row*5)
+        assert c["value_unit"] == "LOLA returns per pixel"
+        status, value = c["observation_status"], c["value"]
+        if status == "observed":
+            assert value is not None and value > 0 and float(value).is_integer()
+        elif status == "unobserved":
+            assert value == 0
+        else:
+            assert status in ("nodata", "unverified") and value is None
+    counts = Counter(c["observation_status"] for c in cells)
+    assert counts == {"observed": 88, "unobserved": 936}
+    summary = data["summary"]
+    assert summary["total_pixel_count"] == summary["valid_pixel_count"] == 1024
+    assert summary["observed_pixel_count"] == 88
+    assert summary["nodata_pixel_count"] == summary["unverified_pixel_count"] == 0
+    assert summary["coverage_percentage"] == 8.59375
+    assert {entry["status"] for entry in data["legend"]} == {"observed", "unobserved", "nodata", "unverified"}
+    assert data["nodata_status"] == "mask-defined" and data["nodata_value"] is None
+    assert data["limitations"]
+    for target, replacement in (("ARTIFACT", provider.ARTIFACT.with_name("missing-verification-artifact.json")),
+                                ("ARTIFACT_SHA256", "0" * 64)):
+        with patch.object(provider, target, replacement):
+            failed = client.get("/api/v1/terrain/site04/coverage")
+            assert failed.status_code == 200
+            assert failed.json()["status"] == "unavailable" and failed.json()["cells"] == []
+    assert not any(name in sys.modules for name in ("rasterio", "osgeo")), "API must not need GIS runtime"
+    print("PASS: Site04 1024 native cells, bounds, counts, provenance, checksum and missing/corrupt fallback.")
+
+
 def verify_http() -> None:
     """Start Uvicorn on an ephemeral loopback port and stop it after a health probe."""
     import json
@@ -100,7 +158,9 @@ def main() -> None:
         assert client.get("/api/v1/analysis").status_code == 405
         changed = client.post("/api/v1/analysis", json={**payload, "latitude": 20, "longitude": 30}).json()
         assert changed["terrain"] == result["terrain"], "Mocks must not imply coordinate calculations"
+        verify_site04(client)
         paths = client.get("/openapi.json").json()["paths"]
+        assert "get" in paths["/api/v1/terrain/site04/coverage"]
         assert "get" in paths["/api/v1/health"] and "post" in paths["/api/v1/analysis"]
         for origin in origins:
             for method in ("GET", "POST", "OPTIONS"):
