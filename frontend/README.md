@@ -1,36 +1,71 @@
 # LunaNav frontend
 
-A responsive React + TypeScript + Vite mission-planning dashboard using lucide-react and plain CSS. All data is fictional and illustrative, not scientifically accurate or suitable for operational mission planning.
+React + TypeScript + Vite mission-planning workspace. Demo comparisons and coloured
+Moon patches are illustrative; real provider responses are identified separately.
+No landing-safety assessment or overall risk score is calculated.
 
-## Run locally
+## Configure and run
 
-From this directory:
+Copy the settings below into frontend/.env.local, using the actual backend origin:
 
-```sh
-npm install
-npm run dev
-npm run build
+```dotenv
+VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-On Windows with PowerShell script execution disabled, use `npm.cmd` in place of `npm`.
+For Vercel, set VITE_API_BASE_URL to the deployed backend HTTPS origin and rebuild.
+The backend CORS_ORIGINS must include the frontend origin. No API keys are needed.
+Without this setting, health/analysis/terrain/coverage use the existing local
+127.0.0.1:8000 default; Horizons geometry requests remain disabled.
 
-## Structure
+```powershell
+npm.cmd install
+npm.cmd run dev
+npm.cmd run build
+```
 
-- `src/App.tsx`: mission configuration, loading state, analyzed-result snapshot, and scenario comparison.
-- `src/components/`: reusable lunar map, metric card, and timeline.
-- Mission-control header, selected-site readout, and scenario assessment components extend the dashboard; Schedule Analyzer and 3D Landing are explicitly marked as planned navigation items.
-- `src/data/mockData.ts`: all preset sites, sample estimates, timeline periods, and initial configuration.
-- `src/services/analysis.ts`: typed demo analysis adapter and future endpoint constant.
-- `src/index.css`: all application styles, responsive layouts, and reduced-motion support.
+## Pages and data
 
-## Demo behavior
+Hash routes replace the main page: #/overview, #/map, #/analysis, #/schedule,
+#/coverage, #/compare, #/landing-3d and #/landing-demo. Dashboard site/date/scenario
+state persists between views. Moon3D receives the selected coordinates on entry.
 
-Select a preset from the dropdown, map marker, or comparison row. Editing coordinates switches to Custom Location. Coordinate limits and required fields use native form validation. Analyze Mission delays locally for 1.2 seconds and returns fixed fixtures; configuration controls are disabled during loading. Existing results retain the last analyzed site and date until the next analysis completes.
+- POST /api/v1/analysis is explicitly mock. Compare Scenarios uses fixed fixtures.
+- LOLA sample/profile endpoints provide bounded local-derived elevation context.
+- JPL Horizons supplies model-derived point-in-time Sun/Earth directions when
+  configured and available. This is not terrain-cleared visibility or a schedule.
+- Site04 coverage supplies a provisional native 32x32 observation-count window in
+  projected X/Y metres, displayed separately on the 3D page. No verified lat/lon
+  overlay exists. Counts are not terrain, risk or suitability.
+- Landing Demo and the toggleable coloured risk patches are illustrative fixtures.
 
-Dates and custom coordinates do not generate scientific estimates. Timeline periods are a shared illustrative fixture and do not derive from metric percentages. The map is a CSS schematic, not a geographic projection.
+Health, terrain and Site04 GET requests have a 15-second bound, including JSON
+reading. Health and coverage provide visible retry controls and error status;
+geometry uses its separate bounded request and retry. No automatic retry loop or
+synthetic coverage fallback is used. Production build includes TypeScript checking.
 
-The reference-inspired workstation styling uses CSS terrain shading, decorative craters, curved coordinate lines, orbital rings, and a technical target tooltip. Scenario status badges and the failure explanation use editorial fixtures in `src/data/mockData.ts`. They do not represent calculated feasibility or scientific failure conditions. Existing metric fixtures and the typed analysis adapter are preserved.
 
-## Future backend integration
+## Adaptive scenario demo and schedule context
 
-The intended endpoint is `POST /api/v1/analysis`. `AnalysisRequest` currently describes site ID, latitude, longitude, and landing date. Replace `analyzeMissionDemo` with a real client only after establishing the backend request and response contracts, including validation, errors, timeouts, and cancellation. The current UI makes no API requests and includes no backend or API keys.
+`#/adaptive-simulation` is a separate first-person scenario trainer. It has a
+scripted warning after two seconds of active playback, demo map, destination
+confirmation, pause/reset controls, course-change animation and explicit scripted
+success/failure endings. Only the fictional Alternate Alpha route is configured
+to succeed. This is not AI inference, flight dynamics or a safe-arrival prediction;
+it makes no backend requests and sends no spacecraft commands. Existing Landing
+Demo remains separate. Planning site/date are context only, not terrain inputs.
+
+Mission Schedule requests geometry directly when configured. Its plot and sample
+scrubber use only returned Horizons observations; no interpolation, invented gaps,
+terrain-aware schedule windows or communications forecasts are generated.
+
+
+## Moon visual renderer
+
+The 3D Moon uses Three.js, React Three Fiber and Drei's orthographic camera.
+The scene is loaded on demand; it uses locally generated decorative crater and
+maria texture, bump shading and studio lighting, not NASA imagery/elevation or
+calculated solar illumination. Its orthographic scale and rotation follow the
+existing screen projection so marker/grid selection stays aligned. Renderer
+failure or WebGL context loss restores the previous Canvas 2D fallback. No
+backend contract, provider values, coverage placement or demo fixture scores
+are changed. The larger graphics bundle is separate from the dashboard bundle.

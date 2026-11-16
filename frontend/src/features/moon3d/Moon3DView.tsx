@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { fetchSite04Coverage } from '../../services/analysis'
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { fetchSite04CoverageResult } from '../../services/analysis'
 import type { Site04CoverageResponse } from './terrainGrid'
 import {
   AlertTriangle,
@@ -30,6 +30,8 @@ import { ScreeningDetails, type SurfaceLocation } from './ScreeningDetails'
 import { Site04CoverageGrid } from './Site04CoverageGrid'
 import { OverallRiskStatus } from './OverallRiskStatus'
 import { DEMO_RISK_BANDS, demoBandForSite, demoPatchBoundary, clipDemoPatch } from './demoRiskOverlay'
+
+const MoonScene = lazy(() => import('./MoonScene'))
 
 interface ProjectedCoords {
   x: number
@@ -85,8 +87,12 @@ function projectPoint(
   return { x: x2, y: y2, z: z2, screenX, screenY, visible, scale, opacity }
 }
 
-export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initialSelectedId?: string; date?: string }) {
+export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03-15' }: { initialSelectedId?: string; initialLocation?: SurfaceLocation; date?: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [webglReady, setWebglReady] = useState(false)
+  const [webglUnavailable, setWebglUnavailable] = useState(false)
+  const reportReady = useCallback(() => setWebglReady(true), [])
+  const reportUnavailable = useCallback(() => { setWebglReady(false); setWebglUnavailable(true) }, [])
   const stageRef = useRef<HTMLDivElement | null>(null)
 
   const [rotX, setRotX] = useState<number>(DEFAULT_ROT_X)
@@ -97,17 +103,22 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
   type Selection = { kind: 'preset'; site: Moon3DLandingSite } | { kind: 'point'; latitude: number; longitude: number }
   const [selection, setSelection] = useState<Selection>(() => {
     const site = MOON3D_LANDING_SITES.find((item) => item.id === (initialSelectedId ?? 'shackleton'))
-    return site ? { kind: 'preset', site } : { kind: 'point', latitude: 0, longitude: 0 }
+    const point = initialLocation && Number.isFinite(initialLocation.latitude) && Math.abs(initialLocation.latitude) <= 90
+      && Number.isFinite(initialLocation.longitude) && Math.abs(initialLocation.longitude) <= 180 ? initialLocation : null
+    if (site && (!point || (site.latitude === point.latitude && site.longitude === point.longitude))) return { kind: 'preset', site }
+    return { kind: 'point', latitude: point?.latitude ?? 0, longitude: point?.longitude ?? 0 }
   })
   const surface: SurfaceLocation = selection.kind === 'preset' ? selection.site : selection
   const setSurface = (point: SurfaceLocation) => setSelection({ kind: 'point', ...point })
-  const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('feasibility')
+  const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('none')
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 440,
     height: 440,
   })
   const [site04Coverage, setSite04Coverage] = useState<Site04CoverageResponse | null>(null)
   const [coverageLoading, setCoverageLoading] = useState(true)
+  const [coverageError, setCoverageError] = useState<string | null>(null)
+  const [coverageAttempt, setCoverageAttempt] = useState(0)
 
   // Pointer drag state
   const isPointerDownRef = useRef(false)
@@ -134,9 +145,9 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
   useEffect(() => {
     let active = true
 
-    fetchSite04Coverage()
-      .then((data) => {
-        if (active) setSite04Coverage(data)
+    fetchSite04CoverageResult()
+      .then(({ data, error }) => {
+        if (active) { setSite04Coverage(data); setCoverageError(error) }
       })
       .finally(() => {
         if (active) setCoverageLoading(false)
@@ -145,7 +156,7 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
     return () => {
       active = false
     }
-  }, [])
+  }, [coverageAttempt])
 
   // ResizeObserver for responsive canvas resolution
   useEffect(() => {
@@ -414,8 +425,8 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
   }, [dimensions, rotX, rotY, heatmapMode, screening])
 
   useEffect(() => {
-    drawMoon()
-  }, [drawMoon])
+    if (!webglReady) drawMoon()
+  }, [drawMoon, webglReady])
 
   // Pointer drag interaction handlers (Mouse + Touch)
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -669,6 +680,7 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
         <p>{selectedSite ? `${selectedSite.name}: ${demoBandForSite(selectedSite.id)?.label ?? 'No demo category'}. Preset identity only; no risk calculation.` : 'Arbitrary selected point: real risk Unknown; patch colour does not assign this point a result.'}</p>
       </section>}
 
+      <p className="moon3d-renderer-status" role="status">{webglReady ? '3D renderer: WebGL / React Three Fiber' : webglUnavailable ? 'WebGL unavailable: using the existing 2D fallback' : 'Preparing 3D renderer; 2D fallback active'} · Surface texture and lighting are decorative, not measured terrain or Horizons sunlight.</p>
       {/* Main Content Grid: Viewport Stage + Inspector Sidebar */}
       <div className="moon3d-grid">
         {/* 3D Viewport Stage */}
@@ -686,7 +698,10 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
             role="region"
             aria-label="Interactive 3D Moon sphere. Drag with mouse or finger to rotate."
           >
-            <canvas ref={canvasRef} className="moon3d-canvas" style={heatmapMode === 'none' ? { filter: 'grayscale(1)' } : undefined} />
+            <canvas ref={canvasRef} className="moon3d-canvas" data-renderer={webglReady ? 'webgl' : '2d-fallback'} style={webglReady ? { opacity: 0 } : heatmapMode === 'none' ? { filter: 'grayscale(1)' } : undefined} />
+            {!webglUnavailable && <div className="moon3d-webgl" aria-hidden="true"><Suspense fallback={null}>
+              <MoonScene rotationX={rotX} rotationY={rotY} size={dimensions.width} onReady={reportReady} onUnavailable={reportUnavailable} />
+            </Suspense></div>}
             <svg className="screening-grid" width={dimensions.width} height={dimensions.height} aria-hidden="true">
               {screening && <><circle cx={cx} cy={cy} r={radius} fill="#8899aa" fillOpacity=".65" />
                 {gridPaths.map((points, i) => <polygon key={i} points={points} fill="none" stroke="#dee6ee" strokeOpacity=".65" strokeDasharray="3 2" />)}
@@ -861,7 +876,7 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15' }: { initial
         </div>
       </div>
 
-      <Site04CoverageGrid data={site04Coverage} loading={coverageLoading} />
+      <Site04CoverageGrid data={site04Coverage} loading={coverageLoading} error={coverageError} onRetry={() => { setSite04Coverage(null); setCoverageError(null); setCoverageLoading(true); setCoverageAttempt(n => n + 1) }} />
       {/* Global Module Disclaimer */}
       <h3>Selected-coordinate provider context · separate from demo fixtures</h3>
       <ScreeningDetails key={`${surface.latitude},${surface.longitude},${date}`} location={surface} date={date} />

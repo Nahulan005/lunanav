@@ -1,8 +1,13 @@
 {
   "schemaVersion": 1,
-  "reviewedOn": "2026-11-14",
-  "liveIntegrations": [],
-  "downloadedDatasets": [],
+  "reviewedOn": "2026-11-16",
+  "liveIntegrations": [
+    "JPL Horizons: network provider implemented; runtime availability is reported per response, not guaranteed by this registry"
+  ],
+  "downloadedDatasets": [
+    "LDEM_4 Apollo 17 bounded elevation cutout (local-derived; integrity checked)",
+    "Site04 LDEC external source TIFF; pinned central 32x32 derived observation-count artifact shipped with backend (provisional)"
+  ],
   "resources": [
     {
       "id": "moon-trek",
@@ -13,7 +18,11 @@
       "plannedFeature": "Discover candidate terrain and imagery products; compare contextual views",
       "category": "reference-tool",
       "integrationStatus": "reference-only; not connected",
-      "limitations": ["No public application endpoint is assumed", "Portal views are not independent validation", "Selected layers require their own provenance and usage review"]
+      "limitations": [
+        "No public application endpoint is assumed",
+        "Portal views are not independent validation",
+        "Selected layers require their own provenance and usage review"
+      ]
     },
     {
       "id": "lola",
@@ -23,8 +32,14 @@
       "capability": "Lunar laser-altimetry topography and associated terrain products",
       "plannedFeature": "Local terrain sampling, slope estimation, and azimuthal horizon profiles",
       "category": "data-source",
-      "integrationStatus": "planned local dataset processing; no products downloaded",
-      "limitations": ["Product and resolution not yet selected", "Pixel spacing is not equivalent to accuracy", "Frames, projection, vertical datum, nodata, and polar coverage require product-specific checks", "Instrument overview is not a terrain API"]
+      "integrationStatus": "Local LDEM_4 sample/profile endpoints and provisional Site04 LDEC observation-coverage endpoint implemented; not a live NASA service",
+      "limitations": [
+        "LDEM_4 elevation coverage is a bounded Apollo 17 cutout; not Site04 terrain",
+        "Site04 LDEC provides observation counts only, not elevation, slope or risk",
+        "Site04 native X/Y mapping inspected; geographic overlay/absolute registration remains unverified",
+        "Pixel spacing does not establish accuracy; no scientific validation or landing-safety assessment",
+        "Slope/horizon and terrain-aware illumination/visibility grids are not connected"
+      ]
     },
     {
       "id": "lroc",
@@ -35,7 +50,12 @@
       "plannedFeature": "Georeferenced image context for selected sites",
       "category": "data-source",
       "integrationStatus": "planned local imagery access; no products downloaded",
-      "limitations": ["The supplied page covers LRO products, not only LROC", "No universal image resolution or image-service endpoint is assumed", "Acquisition illumination and viewing geometry affect appearance", "Imagery alone does not establish elevation or landing safety"]
+      "limitations": [
+        "The supplied page covers LRO products, not only LROC",
+        "No universal image resolution or image-service endpoint is assumed",
+        "Acquisition illumination and viewing geometry affect appearance",
+        "Imagery alone does not establish elevation or landing safety"
+      ]
     },
     {
       "id": "naif-spice",
@@ -46,7 +66,12 @@
       "plannedFeature": "Sun and Earth directions in a documented lunar frame and local horizon frame",
       "category": "scientific-toolkit-and-kernel-source",
       "integrationStatus": "planned local computation; no toolkit or kernels installed for LunaNav",
-      "limitations": ["Toolkit APIs are library interfaces, not an assumed web service", "Kernel coverage, lunar orientation frame, time conversion, and aberration choices must be recorded", "Geometry does not include terrain blocking without a terrain model", "Earth visibility does not prove radio communication"]
+      "limitations": [
+        "Toolkit APIs are library interfaces, not an assumed web service",
+        "Kernel coverage, lunar orientation frame, time conversion, and aberration choices must be recorded",
+        "Geometry does not include terrain blocking without a terrain model",
+        "Earth visibility does not prove radio communication"
+      ]
     },
     {
       "id": "cms",
@@ -57,7 +82,11 @@
       "plannedFeature": "Inform terrain-profile and planning UX; manual comparison where matching data and settings are available",
       "category": "reference-tool",
       "integrationStatus": "reference-only; not connected",
-      "limitations": ["No public API or automated access is assumed", "Availability of a workflow is not evidence of equivalent LunaNav capability", "Comparisons require matched datasets and analysis assumptions"]
+      "limitations": [
+        "No public API or automated access is assumed",
+        "Availability of a workflow is not evidence of equivalent LunaNav capability",
+        "Comparisons require matched datasets and analysis assumptions"
+      ]
     }
   ]
 }

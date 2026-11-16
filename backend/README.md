@@ -186,9 +186,10 @@ when packaging it. All five resources are acknowledged:
 - NASA Celestial Mapping System: terrain/profile/visibility planning reference.
 
 See [architecture](../docs/architecture.md) for official URLs, limitations, and data flow.
-The registry's planned-only LOLA status predates the existing local cutout and has
-not been edited by this backend-only change. The sample/profile endpoints use that
-cutout; the other resources remain references or future integrations. No public API
+The source registry records local LDEM_4 elevation and provisional Site04 LDEC
+coverage processing. Horizons is recorded separately as a network geometry
+provider; NAIF/SPICE remains planned. Moon Trek, LROC and CMS remain references
+or future integrations. No public API
 is assumed for these resources, and NASA data alone does not validate derived results.
 
 `src/providers.ts`, `src/mockProviders.ts`, and `tsconfig.json` are retained **contract

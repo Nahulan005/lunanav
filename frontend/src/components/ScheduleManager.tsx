@@ -1,14 +1,16 @@
 
 import type { FormEvent } from 'react'
-import { Clock3, Globe2, MapPin, Sun } from 'lucide-react'
+import { Clock3, MapPin } from 'lucide-react'
 import type { AnalysisRequest } from '../data/mockData'
-import type { GeometryPanelState } from './SunEarthGeometryPanel'
+import { SunEarthGeometryPanel, type GeometryPanelState } from './SunEarthGeometryPanel'
+import { GeometryTimeline } from './GeometryTimeline'
 
 interface ScheduleManagerProps {
   request: AnalysisRequest
   siteName: string
   geometry: GeometryPanelState | null
   loading: boolean
+  onGeometryState: (state: GeometryPanelState) => void
   onDateChange: (date: string) => void
   onAnalyze: (event: FormEvent<HTMLFormElement>) => void
 }
@@ -19,19 +21,9 @@ export function ScheduleManager({
   geometry,
   loading,
   onDateChange,
+  onGeometryState,
   onAnalyze,
 }: ScheduleManagerProps) {
-  const response = geometry?.response
-  const observation =
-    response?.status === 'available' &&
-    response.live_request_executed &&
-    response.observation
-      ? response.observation
-      : null
-
-  const angle = (value: number | undefined) =>
-    value === undefined ? 'Unavailable' : `${value.toFixed(2)}°`
-
   return (
     <section className="workspace-view" data-workspace-page="schedule" aria-label="Mission Schedule">
       <div className="workspace-section-label">
@@ -72,45 +64,8 @@ export function ScheduleManager({
         </button>
       </form>
 
-      <section className="panel schedule-geometry" aria-label="Point-in-time geometry context">
-        <div className="section-heading">
-          <h2><Sun size={17} /> Sun & Earth geometry context</h2>
-          <span className="small-badge">
-            {geometry?.loading
-              ? 'REQUESTING'
-              : observation
-                ? 'MODEL-DERIVED'
-                : 'UNAVAILABLE'}
-          </span>
-        </div>
-
-        {observation ? (
-          <>
-            <p className="geometry-epoch">
-              UTC observation: {new Date(observation.timestamp_utc).toISOString()}
-            </p>
-            <div className="geometry-readings">
-              <div><Sun size={15} /><span>Sun azimuth<strong>{angle(observation.sun.azimuth_deg)}</strong></span></div>
-              <div><Sun size={15} /><span>Sun elevation<strong>{angle(observation.sun.elevation_deg)}</strong></span></div>
-              <div><Globe2 size={15} /><span>Earth azimuth<strong>{angle(observation.earth.azimuth_deg)}</strong></span></div>
-              <div><Globe2 size={15} /><span>Earth elevation<strong>{angle(observation.earth.elevation_deg)}</strong></span></div>
-            </div>
-          </>
-        ) : (
-          <p className="unavailable-message">
-            {geometry?.loading
-              ? 'Waiting for the geometry provider response.'
-              : response?.detail ||
-                'No matching model-derived observation is available. Visit Site Analysis to request geometry.'}
-          </p>
-        )}
-
-        <p className="tab-context-note">
-          These are apparent directions at one observation time, not
-          illumination-duration predictions, terrain-cleared visibility,
-          or guaranteed communication windows.
-        </p>
-      </section>
+      <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={onGeometryState} initialState={geometry} />
+      <GeometryTimeline key={JSON.stringify(request)} geometry={geometry} />
 
       <section className="panel schedule-window-status">
         <h2>Mission schedule windows</h2>
