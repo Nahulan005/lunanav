@@ -145,8 +145,8 @@ constraints, not a reproducible production lock; pin a tested environment before
 ## API and contracts
 
 - `GET /api/v1/health`: application liveness and mock mode, not scientific readiness.
-- `POST /api/v1/analysis`: validates coordinates, date, optional `duration_days` (1–30),
-  and `observer_height_m` (0–1000). The date labels a UTC fixture; it does not drive
+- `POST /api/v1/analysis`: validates coordinates, date, optional `duration_days` (1â€“30),
+  and `observer_height_m` (0â€“1000). The date labels a UTC fixture; it does not drive
   astronomical calculations. Invalid inputs return FastAPI's structured 422 response.
 - `/docs` and `/openapi.json`: generated documentation and Python contract source.
 
@@ -225,3 +225,19 @@ from coordinates, provenance, all five references, CORS, and generated OpenAPI.
 It does not validate lunar science or replace a production deployment test.
 Add `--http` to also start a temporary Uvicorn server on an ephemeral loopback port,
 probe its health over HTTP, and stop it automatically.
+
+
+## Site04 observation coverage
+
+`GET /api/v1/terrain/site04/coverage` serves the pinned central 32x32 native
+LDEC window in projected X/Y metres, with provisional status and no query
+parameters. The API does not read the external raw TIFF or import Rasterio.
+Ship `data/processed/site04_coverage_window.json` with the application; it is
+explicitly allowed by .gitignore. Missing/corrupt artifacts return unavailable
+with empty cells, never mock data. The existing backend verification command
+checks both the populated response and integrity-failure behavior.
+
+See [Site04 handoff](docs/site04-coverage.md) for metadata, reproduction, exact
+bounds, count meanings and limitations. The Moon3D coverage panel uses this
+response in a separate X/Y view. Geographic overlay is blocked pending verified
+lat/lon transformation; observation counts do not establish landing suitability.

@@ -1,5 +1,5 @@
 import { demoAnalyses, type AnalysisRequest, type DemoAnalysis } from '../data/mockData'
-import type { Site04CoverageResponse } from '../features/moon3d/terrainGrid'
+import { isSite04CoverageResponse, type Site04CoverageResponse } from '../features/moon3d/terrainGrid'
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
 export const HEALTH_ENDPOINT = `${API_BASE_URL}/api/v1/health`
@@ -245,8 +245,8 @@ export async function fetchSite04Coverage(): Promise<Site04CoverageResponse | nu
       return null
     }
 
-    const data: Site04CoverageResponse = await res.json()
-    return data
+    const data: unknown = await res.json()
+    return isSite04CoverageResponse(data) ? data : null
   } catch {
     return null
   }

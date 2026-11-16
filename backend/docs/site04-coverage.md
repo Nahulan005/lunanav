@@ -5,12 +5,14 @@ unavailable-only description and preflight blocker. Schema and endpoint path are
 
 Consume `GET /api/v1/terrain/site04/coverage` (no query parameters yet).
 HTTP 200 describes provider status; it does not imply data is available.
-The response currently always has `status: unavailable`, empty cells and null
-unverified metadata. It does not inspect or read TIFFs. Copying a TIFF into the
-repository will not activate ingestion. Existing endpoints remain unchanged.
+The response serves a pinned central 32x32 native window with `status: provisional`.
+Missing or corrupt artifacts return `status: unavailable` and empty cells. The API
+reads the compact derived JSON, never the raw TIFF. Copying a TIFF into the
+repository does not activate ingestion. Existing endpoints remain unchanged.
 
 Exact contract: [JSON Schema](site04-coverage.schema.json).
-Exact current response: [example](site04-coverage.example.json).
+Unavailable fallback response: [example](site04-coverage.example.json).
+Current populated response: `backend/data/processed/site04_coverage_window.json`.
 FastAPI also exposes the model through `/openapi.json`.
 
 ## Renderer interpretation
@@ -27,26 +29,23 @@ FastAPI also exposes the model through `/openapi.json`.
   100 * observed / valid, excluding nodata/unverified pixels; it remains null
   until observation semantics are established, or when valid count is zero.
 - Null nodata_value with unverified nodata_status means unknown sentinel.
-- Missing/unverified cells render grey with a symbol. The current legend only
-  defines these states; observed/unobserved legend entries must be added with
-  documented value semantics later. Never interpolate or use demo values.
-- Source includes an instrument reference only. Product download URL, checksum,
-  processing version and validation checks remain unset until evidenced.
+- Missing/unverified cells render grey with a symbol. The populated response legend defines all four states using documented
+  count semantics; the unavailable fallback legend defines only missing/unknown. Never interpolate or use demo values.
+- The populated source includes product URL, supplied checksum, processing version
+  and completed inspection checks. These remain unset in the unavailable fallback.
 - Lat/lon rendering is blocked until source georeferencing and lunar-frame
   transformation are verified. Do not apply a terrestrial EPSG assumption.
 
-## Activation gate (future work)
+## Geographic overlay gate (future work)
 
-Inspect the real TIFF and authoritative product documentation for frame, affine
-transform, pixel registration, dimensions, units, nodata/masks and observation
-semantics. Record exact source URL/checksum and bounded processing provenance.
-Implement bounded regional window parameters and clipping in a later change;
-no request bounds are accepted now. Provisional status must expose unresolved
-assumptions and must not be presented as validated data. Status fields reserve
-future states; this route currently emits only unavailable.
+Native metadata inspection and bounded processing are recorded below. No
+latitude/longitude transformation is verified: keep this grid in projected X/Y.
+Regional window parameters and clipping remain future work; no request bounds
+are accepted now. Provisional status exposes unresolved absolute registration
+assumptions and must not be presented as scientific validation.
 
 Coverage does not establish slope, terrain horizon, illumination, radio access,
-landing suitability or a recommendation. No terrain processing occurs here.
+landing suitability or a recommendation. This API only serves preprocessed observation counts.
 
 
 ## Local source preflight (2026-11-15; ingestion blocked)
@@ -159,3 +158,40 @@ response/source validation remains provisional, not scientific validation.
 This layer contains observation counts, not elevation or elevation datum, slope,
 horizon, illumination, RF availability, landing suitability, risk or recommendations.
 The existing illustrative scenario-comparison visualization is unchanged.
+
+
+## Integration verification (2026-11-16)
+
+The existing backend verification script now checks the populated API response,
+all 1024 native cell bounds and count semantics, summary, source checksum and
+provisional status. It also simulates a missing artifact and checksum mismatch:
+both must return HTTP 200 with unavailable status and empty cells. No GIS package
+is imported by the API. Existing analysis remains mock.
+
+The Moon3D page displays this response in a separate projected X/Y coverage
+panel, never on the globe. Select a cell to inspect its source index, bounds and
+count. API failure or invalid responses show unavailable with no demo substitute.
+Configure the frontend VITE_API_BASE_URL to the backend origin before building;
+without configuration the existing service uses http://127.0.0.1:8000.
+For local development, run the existing backend and frontend commands in their
+respective READMEs, then open #/landing-3d. Production packaging needs the tracked
+derived JSON artifact; the external raw TIFF and Rasterio are unnecessary at runtime.
+
+
+## Overall-risk overlay blocker (2026-11-16)
+
+The frontend Overall Risk mode is an availability explanation, not a risk model.
+It renders Unknown in grey, with no fixture scores, coloured risk classifications
+or recommendations. Site04 LDEC contains return counts only. No Site04 slope,
+horizon-by-azimuth, terrain-aware time-window illumination/visibility grid, shared
+verified lat/lon registration, uncertainty model or configured mission thresholds
+is connected. The coarse Apollo 17 cutout is a different location and scale; it
+must not supply Site04 slope. Horizons directions remain point-in-time context.
+
+A future risk API requires per-cell verified geographic bounds/frame, spatial
+baseline and units for slope, terrain horizons/observer height, dated/time-sampled
+Sun/Earth metrics and uncertainties, versioned mission requirements, per-criterion
+pass/fail/unknown explanations, and source/checksum provenance. Mandatory failures
+must not be compensated by weighted averages; any missing mandatory input must
+preserve Unknown. Observation counts alone cannot provide an overall risk score.
+The existing coverage contract and endpoint remain unchanged.
