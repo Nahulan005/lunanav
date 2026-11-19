@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { OrthographicCamera } from '@react-three/drei'
 import { CanvasTexture, SRGBColorSpace } from 'three'
 
-interface Props { rotationX: number; rotationY: number; size: number; onReady: () => void; onUnavailable: () => void }
+interface Props { rotationX: number; rotationY: number; size: number; zoom?: number; onReady: () => void; onUnavailable: () => void }
 
 /** Locally generated decorative albedo/bump texture. Never NASA terrain or elevation. */
 function makeRegolith() {
@@ -60,7 +60,7 @@ export default function MoonScene(props:Props) {
   return <SceneBoundary onUnavailable={props.onUnavailable}>
     <Canvas frameloop="demand" dpr={[1,1.5]} gl={{alpha:true,antialias:true,powerPreference:'low-power'}}
       fallback={<span>Canvas unavailable; use the 2D fallback.</span>} style={{pointerEvents:'none'}}>
-      <OrthographicCamera makeDefault position={[0,0,5]} zoom={props.size*.44} near={.1} far={20} />
+      <OrthographicCamera key={props.zoom ?? 1} makeDefault position={[0,0,5]} zoom={props.size*.44*(props.zoom ?? 1)} near={.1} far={20} />
       <ambientLight intensity={0.35} />
       <directionalLight position={[-3,3,4]} intensity={2.3} color="#f5f6f7" />
       <directionalLight position={[3,-1,-2]} intensity={0.25} color="#719bbd" />

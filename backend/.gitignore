@@ -1,4 +1,5 @@
 data/raw/*
+data/site04_external/
 !data/raw/.gitkeep
 !data/raw/ldem_4_apollo17_cutout.bin
 data/processed/*
@@ -6,3 +7,4 @@ data/processed/*
 .pytest_cache/
 
 !data/processed/site04_coverage_window.json
+!data/processed/site04_terrain_window.json

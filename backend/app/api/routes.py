@@ -15,6 +15,10 @@ from app.schemas.analysis import AnalysisRequest, AnalysisResponse, HealthRespon
 from app.schemas.geometry import SunEarthGeometryResponse
 from app.schemas.site04_coverage import Site04CoverageResponse
 from app.providers.site04_coverage import get_site04_coverage
+from app.providers.site04_terrain import get_site04_terrain
+from app.schemas.site04_terrain import Site04TerrainResponse, Site04Footprint
+from app.providers.site04_coordinates import to_lat_lon
+from app.providers.site04_windows import read_window, OutsideSite04Coverage
 from app.schemas.terrain import TerrainProfile, TerrainSampleResponse
 from app.services.analysis import AnalysisService
 
@@ -160,3 +164,36 @@ def get_sun_earth_geometry(
 def site04_observation_coverage() -> Site04CoverageResponse:
     """Return the pinned 32x32 source-frame window, or unavailable on integrity failure."""
     return get_site04_coverage()
+
+
+@router.get("/terrain/site04/grid", response_model=Site04TerrainResponse,
+            summary="Bounded native Site04 elevation, slope and RMS uncertainties")
+def site04_terrain_grid(
+    latitude: Annotated[float | None, Query(ge=-90, le=90, allow_inf_nan=False)] = None,
+    longitude: Annotated[float | None, Query(ge=-180, le=180, allow_inf_nan=False)] = None,
+    width: Annotated[int, Query(ge=1, le=32)] = 32,
+) -> Site04TerrainResponse:
+    if latitude is None and longitude is None:
+        return get_site04_terrain()
+    if latitude is None or longitude is None:
+        raise HTTPException(status_code=422, detail={"code": "COORDINATE_PAIR_REQUIRED", "message": "Supply both latitude and longitude."})
+    try:
+        return read_window(latitude, longitude, width)
+    except OutsideSite04Coverage as error:
+        raise HTTPException(status_code=422, detail={"code": "OUTSIDE_SITE04_COVERAGE", "message": str(error)}) from error
+
+
+@router.get("/terrain/site04/footprint", response_model=Site04Footprint)
+def site04_footprint() -> Site04Footprint:
+    # Densified perimeter, not a geographic bounding box (source contains the pole).
+    points = []
+    for start, end in [((-9000,1000),(7000,1000)),((7000,1000),(7000,-15000)),
+                       ((7000,-15000),(-9000,-15000)),((-9000,-15000),(-9000,1000))]:
+        for i in range(17):
+            x = start[0] + (end[0]-start[0])*i/16
+            y = start[1] + (end[1]-start[1])*i/16
+            lat, lon = to_lat_lon(x,y)
+            points.append(dict(latitude=lat,longitude=lon))
+    lat, lon = to_lat_lon(-1000,-7000)
+    return Site04Footprint(projected_bounds=dict(min_x=-9000,min_y=-15000,max_x=7000,max_y=1000),
+        center=dict(latitude=lat,longitude=lon),boundary=points)

@@ -1,0 +1,292 @@
+{
+  "surf": {
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.5 [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I5 -R-9.00000000000e+03/7.00000000000e+03/-1.50000000000e+04/1.00000000000e+03 -Gtest.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{-9000,7000}",
+      "x#long_name": "x",
+      "y#actual_range": "{-15000,1000}",
+      "y#long_name": "y",
+      "z#actual_range": "{-2847.877197265625,1805.072631835938}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": {
+      "actual_range": "{-2847.877197265625,1805.072631835938}",
+      "long_name": "z",
+      "NETCDF_VARNAME": "z",
+      "_FillValue": "nan"
+    },
+    "band_unit": null,
+    "crs_wkt": "PROJCS[\"unnamed\",GEOGCS[\"unnamed ellipse\",DATUM[\"unknown\",SPHEROID[\"unnamed\",1737400,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "transform": [
+      -9000.0,
+      5.0,
+      0.0,
+      1000.0,
+      0.0,
+      -5.0
+    ],
+    "bounds": [
+      -9000.0,
+      -15000.0,
+      7000.0,
+      1000.0
+    ],
+    "dtype": "float32",
+    "nodata": "NaN",
+    "scales": [
+      1.0
+    ],
+    "offsets": [
+      0.0
+    ],
+    "mask_flags": [
+      [
+        "nodata"
+      ]
+    ]
+  },
+  "slp": {
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.5 [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I5 -R-9.00000000000e+03/7.00000000000e+03/-1.50000000000e+04/1.00000000000e+03 -Gtest.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{-9000,7000}",
+      "x#long_name": "x",
+      "y#actual_range": "{-15000,1000}",
+      "y#long_name": "y",
+      "z#actual_range": "{0,69.64722442626953}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": {
+      "actual_range": "{0,69.64722442626953}",
+      "long_name": "z",
+      "NETCDF_VARNAME": "z",
+      "_FillValue": "nan"
+    },
+    "band_unit": null,
+    "crs_wkt": "PROJCS[\"unnamed\",GEOGCS[\"unnamed ellipse\",DATUM[\"unknown\",SPHEROID[\"unnamed\",1737400,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "transform": [
+      -9000.0,
+      5.0,
+      0.0,
+      1000.0,
+      0.0,
+      -5.0
+    ],
+    "bounds": [
+      -9000.0,
+      -15000.0,
+      7000.0,
+      1000.0
+    ],
+    "dtype": "float32",
+    "nodata": "NaN",
+    "scales": [
+      1.0
+    ],
+    "offsets": [
+      0.0
+    ],
+    "mask_flags": [
+      [
+        "nodata"
+      ]
+    ]
+  },
+  "toterr": {
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.5 [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I5 -R-9.00000000000e+03/7.00000000000e+03/-1.50000000000e+04/1.00000000000e+03 -Gtest.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{-9000,7000}",
+      "x#long_name": "x",
+      "y#actual_range": "{-15000,1000}",
+      "y#long_name": "y",
+      "z#actual_range": "{0.06385684758424759,7.635095596313477}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": {
+      "actual_range": "{0.06385684758424759,7.635095596313477}",
+      "long_name": "z",
+      "NETCDF_VARNAME": "z",
+      "_FillValue": "nan"
+    },
+    "band_unit": null,
+    "crs_wkt": "PROJCS[\"unnamed\",GEOGCS[\"unnamed ellipse\",DATUM[\"unknown\",SPHEROID[\"unnamed\",1737400,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "transform": [
+      -9000.0,
+      5.0,
+      0.0,
+      1000.0,
+      0.0,
+      -5.0
+    ],
+    "bounds": [
+      -9000.0,
+      -15000.0,
+      7000.0,
+      1000.0
+    ],
+    "dtype": "float32",
+    "nodata": "NaN",
+    "scales": [
+      1.0
+    ],
+    "offsets": [
+      0.0
+    ],
+    "mask_flags": [
+      [
+        "nodata"
+      ]
+    ]
+  },
+  "slperr": {
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.5 [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I5 -R-9.00000000000e+03/7.00000000000e+03/-1.50000000000e+04/1.00000000000e+03 -Gtest.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{-9000,7000}",
+      "x#long_name": "x",
+      "y#actual_range": "{-15000,1000}",
+      "y#long_name": "y",
+      "z#actual_range": "{0.5000152587890625,28.14303016662598}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": {
+      "actual_range": "{0.5000152587890625,28.14303016662598}",
+      "long_name": "z",
+      "NETCDF_VARNAME": "z",
+      "_FillValue": "nan"
+    },
+    "band_unit": null,
+    "crs_wkt": "PROJCS[\"unnamed\",GEOGCS[\"unnamed ellipse\",DATUM[\"unknown\",SPHEROID[\"unnamed\",1737400,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "transform": [
+      -9000.0,
+      5.0,
+      0.0,
+      1000.0,
+      0.0,
+      -5.0
+    ],
+    "bounds": [
+      -9000.0,
+      -15000.0,
+      7000.0,
+      1000.0
+    ],
+    "dtype": "float32",
+    "nodata": "NaN",
+    "scales": [
+      1.0
+    ],
+    "offsets": [
+      0.0
+    ],
+    "mask_flags": [
+      [
+        "nodata"
+      ]
+    ]
+  },
+  "ldec": {
+    "tags": {
+      "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+      "NC_GLOBAL#GMT_version": "5.4.5 [64-bit]",
+      "NC_GLOBAL#history": "xyz2grd -bi3 -I5 -R-9.00000000000e+03/7.00000000000e+03/-1.50000000000e+04/1.00000000000e+03 -Gtest.grd -r",
+      "NC_GLOBAL#node_offset": "1",
+      "x#actual_range": "{-9000,7000}",
+      "x#long_name": "x",
+      "y#actual_range": "{-15000,1000}",
+      "y#long_name": "y",
+      "z#actual_range": "{0,5}",
+      "z#long_name": "z",
+      "z#_FillValue": "nan",
+      "AREA_OR_POINT": "Area"
+    },
+    "band_tags": {
+      "actual_range": "{0,5}",
+      "long_name": "z",
+      "NETCDF_VARNAME": "z",
+      "_FillValue": "nan"
+    },
+    "band_unit": null,
+    "crs_wkt": "PROJCS[\"unnamed\",GEOGCS[\"unnamed ellipse\",DATUM[\"unknown\",SPHEROID[\"unnamed\",1737400,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+    "transform": [
+      -9000.0,
+      5.0,
+      0.0,
+      1000.0,
+      0.0,
+      -5.0
+    ],
+    "bounds": [
+      -9000.0,
+      -15000.0,
+      7000.0,
+      1000.0
+    ],
+    "dtype": "float32",
+    "nodata": "NaN",
+    "scales": [
+      1.0
+    ],
+    "offsets": [
+      0.0
+    ],
+    "mask_flags": [
+      [
+        "nodata"
+      ]
+    ]
+  },
+  "sources": [
+    {
+      "product": "Site04_final_adj_5mpp_surf.tif",
+      "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_surf.tif",
+      "sha256": "38ff70dbdf2f066c2cfa94a646c3a59d653ce7f6b4528b15fc1b43ee397ce758",
+      "bytes": 40980806
+    },
+    {
+      "product": "Site04_final_adj_5mpp_slp.tif",
+      "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_slp.tif",
+      "sha256": "ec3cfa184b114d95aff498e7452764a8569737ae829e7ff3efd38d5187182579",
+      "bytes": 40980772
+    },
+    {
+      "product": "Site04_final_adj_5mpp_toterr.tif",
+      "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_toterr.tif",
+      "sha256": "416c4baa3b64def0182bb3379a1a9228482efd8ce32a39309ea8de5d0330fbe6",
+      "bytes": 40980808
+    },
+    {
+      "product": "Site04_final_adj_5mpp_slperr.tif",
+      "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_slperr.tif",
+      "sha256": "067cd4d8e3e8c14a9a5be1915242532f85063f1b300f248407cc8c8b68e90695",
+      "bytes": 40980806
+    },
+    {
+      "product": "Site04_final_adj_5mpp_ldec.tif",
+      "url": "https://pgda.gsfc.nasa.gov/data/LOLA_5mpp/Site04/Site04_final_adj_5mpp_ldec.tif",
+      "sha256": "fcc8c2219ae2368d5b2a1f6aec05fcf96cf725f3035ac8d80efc312a4ff29227",
+      "bytes": 40980740
+    }
+  ],
+  "artifact_sha256": "af715a84f5b494d3e04c7c844bbd1ea9da913aff26e5ef0e93bdf30178fadb0c",
+  "rasterio_version": "1.5.2",
+  "gdal_version": "3.12.2"
+}
