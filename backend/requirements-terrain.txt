@@ -1,0 +1,4 @@
+# Optional regional-window reader. Fixed artifact endpoints need no GIS runtime.
+-r requirements.txt
+rasterio>=1.5.2,<2
+numpy>=2,<3

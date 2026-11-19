@@ -230,6 +230,20 @@ probe its health over HTTP, and stop it automatically.
 
 ## Site04 observation coverage
 
+Regional coordinate queries and an interactive frontend explorer are documented
+in [Site04 spatial access](docs/site04-spatial-access.md). The regional reader is
+optional and requires external TIFF provisioning; the existing fixed artifact
+endpoints remain lightweight. No suitability classification is added.
+The [Render deployment preparation](docs/site04-render-deployment.md) describes
+checksum-verified build-time downloads and the confirmed backend root layout.
+
+Additional endpoint: `GET /api/v1/terrain/site04/grid` serves a real, bounded
+native elevation/slope/RMS-uncertainty subset with provisional status. See
+[terrain handoff](docs/site04-terrain.md) for provenance, exact contract,
+reproduction, verification and unresolved geographic/vertical reference limits.
+Ship `data/processed/site04_terrain_window.json`; raw TIFFs and GIS packages are
+not required by the deployed API. This does not activate suitability analysis.
+
 `GET /api/v1/terrain/site04/coverage` serves the pinned central 32x32 native
 LDEC window in projected X/Y metres, with provisional status and no query
 parameters. The API does not read the external raw TIFF or import Rasterio.

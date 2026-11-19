@@ -29,9 +29,13 @@ import './moon3d.css'
 import { ScreeningDetails, type SurfaceLocation } from './ScreeningDetails'
 import { Site04CoverageGrid } from './Site04CoverageGrid'
 import { OverallRiskStatus } from './OverallRiskStatus'
+import { Site04SurfaceLayer, Site04FootprintLayer, useSite04Surface } from './Site04SurfaceLayer'
+import { Site04ExtentView } from './Site04ExtentView'
+import { fetchSite04Footprint, type GeographicPoint, type Site04Cell, type Site04Footprint } from '../../services/site04Terrain'
 import { DEMO_RISK_BANDS, demoBandForSite, demoPatchBoundary, clipDemoPatch } from './demoRiskOverlay'
 
 const MoonScene = lazy(() => import('./MoonScene'))
+const Site04TerrainScene = lazy(() => import('./Site04TerrainScene'))
 
 interface ProjectedCoords {
   x: number
@@ -100,6 +104,13 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
   const [autoRotate, setAutoRotate] = useState<boolean>(false)
   const [showCoordinateGrid, setShowCoordinateGrid] = useState(false)
   const [showDemoRisk, setShowDemoRisk] = useState(false)
+  const [realSite04, setRealSite04] = useState(false)
+  const [regionalZoom, setRegionalZoom] = useState(1)
+  const [site04Center, setSite04Center] = useState<GeographicPoint | null>(null)
+  const [site04Footprint,setSite04Footprint]=useState<Site04Footprint|null>(null)
+  const [inspectedTerrainCell, setInspectedTerrainCell] = useState<Site04Cell | null>(null)
+  const [demoTerrain, setDemoTerrain] = useState(false)
+  const [inspectedDemoCell, setInspectedDemoCell] = useState<Site04Cell | null>(null)
   type Selection = { kind: 'preset'; site: Moon3DLandingSite } | { kind: 'point'; latitude: number; longitude: number }
   const [selection, setSelection] = useState<Selection>(() => {
     const site = MOON3D_LANDING_SITES.find((item) => item.id === (initialSelectedId ?? 'shackleton'))
@@ -109,6 +120,19 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
     return { kind: 'point', latitude: point?.latitude ?? 0, longitude: point?.longitude ?? 0 }
   })
   const surface: SurfaceLocation = selection.kind === 'preset' ? selection.site : selection
+  const realTerrain = useSite04Surface(realSite04, surface)
+  useEffect(()=>setInspectedTerrainCell(null),[realTerrain.data])
+  const realElevationValues = realTerrain.data?.cells.flatMap(cell => cell.elevation.status === 'available' && cell.elevation.value !== null ? [cell.elevation.value] : []) ?? []
+  useEffect(() => {
+    if (!realSite04) return
+    const controller = new AbortController()
+    const timer = window.setTimeout(() => controller.abort(),20000)
+    fetchSite04Footprint(controller.signal).then(value => { if (!controller.signal.aborted) {
+      setSite04Center(value.center);setSite04Footprint(value)
+      setRotX(-value.center.latitude*Math.PI/180);setRotY(-value.center.longitude*Math.PI/180);setAutoRotate(false)
+    } }).catch(() => {}).finally(() => window.clearTimeout(timer))
+    return () => { controller.abort();window.clearTimeout(timer) }
+  }, [realSite04])
   const setSurface = (point: SurfaceLocation) => { setSelection({ kind: 'point', ...point }); onLocationSelect?.(point) }
   useEffect(() => {
     if (!compact) return
@@ -116,6 +140,9 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
     if (site) setSelection({ kind: 'preset', site })
   }, [initialSelectedId, compact])
   const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('none')
+  useEffect(() => {
+    if (heatmapMode !== 'none') { setRealSite04(false);setRegionalZoom(1);setDemoTerrain(false) }
+  }, [heatmapMode])
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 440,
     height: 440,
@@ -165,7 +192,9 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
 
   // ResizeObserver for responsive canvas resolution
   useEffect(() => {
-    const el = stageRef.current
+    // Project markers, clicks and real cells in the actual canvas viewport,
+    // not the wider stage panel (the canvas has its own responsive max-width).
+    const el = canvasRef.current?.parentElement
     if (!el) return
 
     const observer = new ResizeObserver((entries) => {
@@ -212,7 +241,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
 
     const cx = size / 2
     const cy = size / 2
-    const radius = size * 0.44
+    const radius = size * 0.44 * regionalZoom
 
     // Directional sunlight vector (from upper-left-front)
     const sunAzimuth = -0.7
@@ -427,7 +456,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
     ctx.restore()
 
     ctx.restore() // Undo base save
-  }, [dimensions, rotX, rotY, heatmapMode, screening])
+  }, [dimensions, rotX, rotY, heatmapMode, screening, regionalZoom])
 
   useEffect(() => {
     if (!webglReady) drawMoon()
@@ -461,12 +490,12 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
     if (!hasMovedSignificantlyRef.current) return
 
     // Drag sensitivity factors
-    const sensitivity = 0.0055
+    const sensitivity = 0.0055 / regionalZoom
     const newRotY = (dragStartRef.current.rotY + dx * sensitivity) % (Math.PI * 2)
     // Constrain pitch to avoid flipping pole upside-down
     const newRotX = Math.max(
-      -1.25,
-      Math.min(1.25, dragStartRef.current.rotX + dy * sensitivity)
+      -Math.PI/2,
+      Math.min(Math.PI/2, dragStartRef.current.rotX + dy * sensitivity)
     )
 
     setRotX(newRotX)
@@ -493,6 +522,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
   }
 
   const handleResetView = () => {
+    setRegionalZoom(1)
     setRotX(DEFAULT_ROT_X)
     setRotY(DEFAULT_ROT_Y)
   }
@@ -509,7 +539,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
   // Pre-calculate 3D projected marker coordinates for overlay buttons
   const cx = dimensions.width / 2
   const cy = dimensions.height / 2
-  const radius = dimensions.width * 0.44
+  const radius = dimensions.width * 0.44 * regionalZoom
   const surfaceClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (hasMovedSignificantlyRef.current || (event.target as HTMLElement).closest('button')) return
     const rect = canvasRef.current?.getBoundingClientRect()
@@ -692,10 +722,26 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
       </section>}
 
       <p className={`moon3d-renderer-status ${compact ? 'home-renderer-status' : ''}`} role="status">{webglReady ? '3D renderer: WebGL / React Three Fiber' : webglUnavailable ? 'WebGL unavailable: using the existing 2D fallback' : 'Preparing 3D renderer; 2D fallback active'} · Surface texture and lighting are decorative, not measured terrain or Horizons sunlight.</p>
+      <div className="moon3d-demo-controls" aria-label="Real Site04 terrain controls">
+        <button type="button" className="moon3d-mode-button" aria-pressed={realSite04} onClick={() => { setRealSite04(value=>!value);setDemoTerrain(false);setRegionalZoom(1);setShowDemoRisk(false);setHeatmapMode('none') }}>Real Site04 elevation · {realSite04 ? 'ON' : 'OFF'}</button>
+        <button type="button" className="moon3d-mode-button" aria-pressed={demoTerrain} onClick={()=>{setDemoTerrain(value=>!value);setInspectedDemoCell(null);setRealSite04(false);setRegionalZoom(1);setAutoRotate(false);setShowDemoRisk(false);setHeatmapMode('none')}}>Illustrative terrain sandbox · {demoTerrain?'ON':'OFF'}</button>
+        {realSite04 && <><button type="button" className="moon3d-mode-button" disabled={!site04Center} onClick={() => {
+          if (!site04Center) return
+          setSurface(site04Center);setRotX(-site04Center.latitude*Math.PI/180);setRotY(-site04Center.longitude*Math.PI/180);setRegionalZoom(12000);setAutoRotate(false)
+        }}>Explore Site04 · regional zoom</button><button type="button" className="moon3d-mode-button" onClick={()=>setRegionalZoom(1)}>Whole Moon</button>
+        <button type="button" className="moon3d-mode-button" disabled={!site04Center} onClick={()=>{if(!site04Center)return;setSurface(site04Center);setRotX(-site04Center.latitude*Math.PI/180);setRotY(-site04Center.longitude*Math.PI/180);setRegionalZoom(200);setAutoRotate(false)}}>Go to Site04 · footprint view</button>
+        <span role="status">{realTerrain.status}</span>
+        <p>Site04 is a 16 × 16 km raster near the south pole, not coverage around every preset node. Cyan dashed outline: source footprint only. Cyan elevation fill: the requested 160 m window, less than one pixel wide at whole-Moon scale. Use the footprint or regional view to see it. An outside-coverage selection remains unavailable until you explicitly go to Site04.</p>
+        <p>Real elevation product · cyan dark to light = low to high within returned window · grey = no displayed data. No risk classification. {regionalZoom>200 ? 'Regional 3D mesh: real elevation relief, equal horizontal/vertical metre scale. Orbit, zoom and inspect samples below.' : 'The 160 m window is tiny at whole-Moon scale; use regional zoom for 3D terrain relief.'} <a href="#/coverage">Values, source and limitations</a></p>
+        {realElevationValues.length ? <p>Returned elevation range {Math.min(...realElevationValues).toFixed(2)}–{Math.max(...realElevationValues).toFixed(2)} m; 5 m native spacing. Surface Z datum remains provisional.</p> : realTerrain.data?.cells.length ? <p>Elevation unavailable throughout the returned window; cells remain grey.</p> : null}</>}
+      </div>
       {/* Main Content Grid: Viewport Stage + Inspector Sidebar */}
       <div className="moon3d-grid">
+        {realSite04 && regionalZoom===200 && <Site04ExtentView footprint={site04Footprint} data={realTerrain.data} onSelect={setSurface} onOpenTerrain={()=>setRegionalZoom(12000)} />}
+        {demoTerrain && <Suspense fallback={<p>Loading illustrative terrain…</p>}><Site04TerrainScene key="demo" illustrative data={null} status="Illustrative demo · no NASA data" onSelect={setInspectedDemoCell} onWholeMoon={()=>setDemoTerrain(false)} /></Suspense>}
+        {realSite04 && regionalZoom>200 && <Suspense fallback={<p>Loading 3D terrain renderer…</p>}><Site04TerrainScene key="real" data={realTerrain.data} status={realTerrain.status} onSelect={setInspectedTerrainCell} onWholeMoon={()=>setRegionalZoom(1)} /></Suspense>}
         {/* 3D Viewport Stage */}
-        <div className="moon3d-stage" ref={stageRef}>
+        <div className="moon3d-stage" ref={stageRef} style={demoTerrain || (realSite04 && regionalZoom>=200) ? {display:'none'} : undefined}>
           <div className="moon3d-stage-bg" />
 
           {/* Interactive Canvas Container with Pointer Drag */}
@@ -709,11 +755,12 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
             role="region"
             aria-label="Interactive 3D Moon sphere. Drag with mouse or finger to rotate."
           >
-            <canvas ref={canvasRef} className="moon3d-canvas" data-renderer={webglReady ? 'webgl' : '2d-fallback'} style={webglReady ? { opacity: 0 } : heatmapMode === 'none' ? { filter: 'grayscale(1)' } : undefined} />
-            {!webglUnavailable && <div className="moon3d-webgl" aria-hidden="true"><Suspense fallback={null}>
-              <MoonScene rotationX={rotX} rotationY={rotY} size={dimensions.width} onReady={reportReady} onUnavailable={reportUnavailable} />
+            <canvas ref={canvasRef} className="moon3d-canvas" data-renderer={webglReady ? 'webgl' : '2d-fallback'} style={(webglReady || (realSite04 && regionalZoom>1)) ? { opacity: 0 } : heatmapMode === 'none' ? { filter: 'grayscale(1)' } : undefined} />
+            {!webglUnavailable && <div className="moon3d-webgl" aria-hidden="true" style={regionalZoom > 1 ? { borderRadius: 0, opacity: realSite04 ? 0 : 1 } : undefined}><Suspense fallback={null}>
+              <MoonScene rotationX={rotX} rotationY={rotY} size={dimensions.width} zoom={regionalZoom} onReady={reportReady} onUnavailable={reportUnavailable} />
             </Suspense></div>}
             <svg className="screening-grid" width={dimensions.width} height={dimensions.height} aria-hidden="true">
+              {realSite04 && <><circle cx={cx} cy={cy} r={radius} fill="#68717c" fillOpacity=".18" /><Site04FootprintLayer showLocator={regionalZoom===1} footprint={site04Footprint} project={(lat,lon)=>projectPoint(lat,lon,rotX,rotY,radius,cx,cy)} /><Site04SurfaceLayer data={realTerrain.data} project={(lat,lon)=>projectPoint(lat,lon,rotX,rotY,radius,cx,cy)} /></>}
               {screening && <><circle cx={cx} cy={cy} r={radius} fill="#8899aa" fillOpacity=".65" />
                 {gridPaths.map((points, i) => <polygon key={i} points={points} fill="none" stroke="#dee6ee" strokeOpacity=".65" strokeDasharray="3 2" />)}
 </>}
@@ -730,13 +777,13 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
                 <path d={path} fill="none" stroke="#b9c2cb" strokeWidth="1" />
                 <text x={x} y={y} fill="#e1f6ff" stroke="#07121d" strokeWidth="2" paintOrder="stroke" fontSize="10">{label}</text>
               </g>)}
-              {surfaceProjection.visible && <g><circle cx={surfaceProjection.screenX} cy={surfaceProjection.screenY} r="7" fill="#0c2134" stroke="white" strokeWidth="2" /><text x={surfaceProjection.screenX + 10} y={surfaceProjection.screenY} fill="white">{screening ? 'Unknown' : selectedSite ? 'Demo preset' : 'Selected'}</text></g>}
+              {surfaceProjection.visible && !realSite04 && <g><circle cx={surfaceProjection.screenX} cy={surfaceProjection.screenY} r="7" fill="#0c2134" stroke="white" strokeWidth="2" /><text x={surfaceProjection.screenX + 10} y={surfaceProjection.screenY} fill="white">{screening ? 'Unknown' : selectedSite ? 'Demo preset' : 'Selected'}</text></g>}
             </svg>
 
             {/* Accessible Landing Site Markers Layer */}
             <div className="moon3d-markers-layer">
               {projectedSites.map(({ site, proj }) => {
-                if (!proj.visible || (screening && !demoRiskVisible)) return null
+                if (!proj.visible || realSite04 || (screening && !demoRiskVisible)) return null
                 const isSelected = selection.kind === 'preset' && selection.site.id === site.id
                 return (
                   <button
@@ -815,8 +862,12 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
 
         {/* Sidebar: Selected Site Inspector + Heatmap Legend */}
         {!compact && <div className="moon3d-sidebar">
+          {demoTerrain && <div className="moon3d-inspector"><h3>Illustrative geometry · not selected-site terrain</h3><p>Authored peaks, crater bowl, rim and ridge show the interaction design when measured data is unavailable. The sandbox is separate from your lunar target and all NASA provider results.</p><p>Local fictional 160 × 160 m patch; click the mesh or choose a sample to inspect its fictional height.</p>{inspectedDemoCell && <p>Demo sample {inspectedDemoCell.row}, {inspectedDemoCell.column}: {inspectedDemoCell.elevation.value?.toFixed(3)} illustrative metres. No lunar coordinates, observations, uncertainty or scientific slope are assigned.</p>}<p>Elevation colours describe height only. No risk, suitability, safety rating or recommendation is produced.</p></div>}
+          {realSite04 && <div className="moon3d-inspector" aria-live="polite"><h3>Real Site04 surface elevation</h3><p>{realTerrain.status}</p><p>NASA LOLA surface model. {regionalZoom>200 ? 'Regional view uses sample heights as actual 3D geometry at 1× vertical scale.' : regionalZoom===200 ? 'Coverage diagram shows the source extent and the requested window, not terrain shading. Open this patch in 3D to inspect relief.' : 'Whole-Moon view uses a colour overlay; open regional zoom for actual 3D relief.'} Missing samples remain unavailable.</p><p>Frame: MOON_ME / DE421. Projection checked against GDAL/PROJ and NASA's named-site reference; absolute placement remains provisional.</p>
+            {(() => { const cell=inspectedTerrainCell ?? realTerrain.data?.cells.find(c=>c.row===realTerrain.data?.selection?.row && c.column===realTerrain.data?.selection?.column);return cell ? <><p>Inspected sample: row {cell.row}, column {cell.column}. {cell.center ? `${cell.center.latitude.toFixed(6)}° / ${cell.center.longitude.toFixed(6)}° east.` : ''} Sample inspection does not move the requested window.</p><dl className="moon3d-fixture-values">{(['elevation','slope','elevation_rms_uncertainty','slope_rms_uncertainty'] as const).map(key=><div key={key}><dt>{key.replaceAll('_',' ')}</dt><dd>{cell[key].value===null ? `Unavailable · ${cell[key].status}` : `${cell[key].value.toFixed(3)} ${cell[key].unit}`}</dd></div>)}<dt>Observation</dt><dd>{cell.observation_status}</dd></dl></> : null })()}
+            <p>No suitability evaluation. Elevation datum and slope baseline remain unresolved; terrain horizons and mission thresholds are unavailable. NASA SURF includes interpolation.</p><a href="#/coverage">Inspect provenance and cell details</a></div>}
           {screening && <OverallRiskStatus location={surface} date={date} coverage={site04Coverage} loading={coverageLoading} />}
-          {!screening && <><div className="moon3d-inspector" aria-live="polite">
+          {!screening && !realSite04 && !demoTerrain && <><div className="moon3d-inspector" aria-live="polite">
   <h3>{activeHeatmap.label}</h3>
   <p className="moon3d-site-desc">Selected location: {surface.latitude.toFixed(4)}&deg; latitude / {surface.longitude.toFixed(4)}&deg; east longitude.</p>
   <p className="moon3d-site-desc">{activeHeatmap.description}</p>
@@ -847,7 +898,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
 
           </>}
           {/* Interactive Heatmap Legend */}
-          <div className="moon3d-legend-card" aria-label="Heatmap legend">
+          {!realSite04 && !demoTerrain && <div className="moon3d-legend-card" aria-label="Heatmap legend">
             <div className="moon3d-legend-head">
               <h4>
                 {heatmapMode === 'sunlight' && <Sun size={15} />}
@@ -883,15 +934,15 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
                 {activeHeatmap.disclaimer}
               </div>
             </div>
-          </div>
+          </div>}
         </div>}
       </div>
 
       {!compact && <>
       <Site04CoverageGrid data={site04Coverage} loading={coverageLoading} error={coverageError} onRetry={() => { setSite04Coverage(null); setCoverageError(null); setCoverageLoading(true); setCoverageAttempt(n => n + 1) }} />
       {/* Global Module Disclaimer */}
-      <h3>Selected-coordinate provider context · separate from demo fixtures</h3>
-      <ScreeningDetails key={`${surface.latitude},${surface.longitude},${date}`} location={surface} date={date} />
+      {!realSite04 && !demoTerrain && <><h3>Selected-coordinate provider context · separate from demo fixtures</h3>
+      <ScreeningDetails key={`${surface.latitude},${surface.longitude},${date}`} location={surface} date={date} /></>}
       <div className="moon3d-disclaimer-banner">
         <CheckCircle2 size={16} />
         <div>
@@ -900,7 +951,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
         </div>
       </div>
       </>}
-      {compact && <p className="home-layer-note" role="status">{activeHeatmap.description} {activeHeatmap.disclaimer}</p>}
+      {compact && <p className="home-layer-note" role="status">{demoTerrain ? 'Illustrative generated terrain; not NASA data or terrain at the selected location.' : realSite04 ? 'Real Site04 elevation overlay · provisional. Grey has no displayed terrain value; no suitability evaluation.' : `${activeHeatmap.description} ${activeHeatmap.disclaimer}`}</p>}
     </section>
   )
 }

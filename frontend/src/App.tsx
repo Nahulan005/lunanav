@@ -15,6 +15,7 @@ import { MissionHome } from './components/MissionHome'
 import './cosmic.css'
 import './orbital.css'
 import { ScheduleManager } from './components/ScheduleManager'
+import { Site04TerrainExplorer } from './components/Site04TerrainExplorer'
 import LandingVisualization from './features/landing/LandingVisualization'
 import { AdaptiveSimulation } from './features/adaptive/AdaptiveSimulation'
 
@@ -271,6 +272,7 @@ function App() {
       )}
       {activeTab === 'coverage' && <section className="workspace-view" data-workspace-page="coverage" aria-label="Data and Coverage">
         <div className="workspace-section-label"><span>DATA &amp; COVERAGE</span><p>Provenance, coverage boundaries, and unresolved data</p></div>
+        <Site04TerrainExplorer point={request} onSelect={point => setRequest(current => ({ ...current, ...point, siteId: 'custom' }))} />
       {terrainSample && terrainResult ? (
         <TerrainProvenancePanel
           result={terrainResult}
