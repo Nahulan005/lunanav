@@ -1,0 +1,67 @@
+{
+  "source_sha256": "fcc8c2219ae2368d5b2a1f6aec05fcf96cf725f3035ac8d80efc312a4ff29227",
+  "source_bytes": 40980740,
+  "rasterio_version": "1.5.2",
+  "gdal_version": "3.12.2",
+  "dtype": "float32",
+  "band_unit": null,
+  "nodata": "NaN",
+  "mask_flags": [
+    [
+      "nodata"
+    ]
+  ],
+  "tags": {
+    "NC_GLOBAL#Conventions": "COARDS, CF-1.5",
+    "NC_GLOBAL#GMT_version": "5.4.5 [64-bit]",
+    "NC_GLOBAL#history": "xyz2grd -bi3 -I5 -R-9.00000000000e+03/7.00000000000e+03/-1.50000000000e+04/1.00000000000e+03 -Gtest.grd -r",
+    "NC_GLOBAL#node_offset": "1",
+    "x#actual_range": "{-9000,7000}",
+    "x#long_name": "x",
+    "y#actual_range": "{-15000,1000}",
+    "y#long_name": "y",
+    "z#actual_range": "{0,5}",
+    "z#long_name": "z",
+    "z#_FillValue": "nan",
+    "AREA_OR_POINT": "Area"
+  },
+  "band_tags": {
+    "actual_range": "{0,5}",
+    "long_name": "z",
+    "NETCDF_VARNAME": "z",
+    "_FillValue": "nan"
+  },
+  "crs_wkt": "PROJCS[\"unnamed\",GEOGCS[\"unnamed ellipse\",DATUM[\"unknown\",SPHEROID[\"unnamed\",1737400,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",-90],PARAMETER[\"central_meridian\",0],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1],AXIS[\"Easting\",NORTH],AXIS[\"Northing\",NORTH]]",
+  "transform": [
+    -9000.0,
+    5.0,
+    0.0,
+    1000.0,
+    0.0,
+    -5.0
+  ],
+  "bounds": [
+    -9000.0,
+    -15000.0,
+    7000.0,
+    1000.0
+  ],
+  "window": {
+    "row_offset": 1584,
+    "column_offset": 1584,
+    "height": 32,
+    "width": 32
+  },
+  "summary": {
+    "status": "provisional",
+    "total_pixel_count": 1024,
+    "valid_pixel_count": 1024,
+    "observed_pixel_count": 88,
+    "nodata_pixel_count": 0,
+    "unverified_pixel_count": 0,
+    "coverage_percentage": 8.59375,
+    "percentage_definition": "100 * observed_pixel_count / valid_pixel_count within returned bounds; null when denominator is zero or semantics are unverified.",
+    "observation_rule": "NASA defines LDEC as number of LOLA returns per pixel: positive integral count = observed; zero = unobserved; masked/NaN = nodata; other invalid values = unverified."
+  },
+  "artifact_sha256": "63fe56171921c817a64de8e5be794f320ae9ceb10a711b57cd59fb866a691a67"
+}

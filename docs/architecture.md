@@ -2,11 +2,13 @@
 
 ## Current implementation and status
 
-The React/TypeScript/Vite frontend is a working illustrative demo. Its mock metrics,
-timeline, scenario explanations, CSS Moon, and local delayed analysis adapter remain
-unchanged. None use NASA observations. The Python FastAPI foundation now implements
-LunaNav-owned `GET /api/v1/health` and `POST /api/v1/analysis` routes in explicit mock
-mode. The frontend remains disconnected from these routes and uses its local adapter.
+The React/TypeScript/Vite frontend connects to the FastAPI backend when configured.
+`POST /api/v1/analysis` remains mock and Compare Scenarios uses fixed fixtures.
+Separate endpoints provide local-derived LDEM_4 elevation sample/profile context,
+provisional Site04 observation counts in native X/Y, and network-derived Horizons
+Sun/Earth directions when the provider returns an available response. Real risk,
+terrain-aware illumination/visibility windows, and recommendations are not evaluated.
+The coloured Moon patches and Landing Demo are explicit presentation fixtures.
 
 `backend/src/providers.ts` retains prototype contracts. `mockProviders.ts` supplies
 network-free placeholders returning absent data or unknown visibility, with explicit
@@ -26,15 +28,17 @@ See [source-registry.json](source-registry.json) for official URLs, proposed rol
 statuses, and limitations. NASA resources informing the architecture are:
 
 - [Moon Trek](https://trek.nasa.gov/moon/): discovery and visual comparison reference.
-- [LRO/LOLA](https://science.nasa.gov/mission/lro/lola/): prospective terrain source.
+- [LRO/LOLA](https://science.nasa.gov/mission/lro/lola/): local bounded elevation and observation-count source; further terrain analysis planned.
 - [LROC through LRO Data Products](https://science.nasa.gov/mission/lro/data-products/): prospective image context.
 - [NAIF/SPICE](https://naif.jpl.nasa.gov/naif/): prospective local geometry toolkit and kernels.
 - [Celestial Mapping System](https://celestialmappingsystem.arc.nasa.gov): mapping, profile, visibility, and planning workflow reference.
 
-These acknowledgements describe design references and planned use, not completed
-scientific integration, NASA endorsement, or validation. No NASA datasets or kernels
-are bundled or downloaded. No NASA services are called by the application.
-Official documentation was reviewed during architecture design only.
+The registry distinguishes implemented local LOLA subsets from references and
+future integrations. JPL Horizons is the configured live network geometry provider;
+NAIF/SPICE is not its implementation and remains planned. Local data and Horizons
+responses do not establish NASA endorsement or scientific validation. No SPICE
+kernels are bundled. Site04 geographic overlay remains blocked pending verified
+registration; see the backend Site04 handoff for its exact native metadata.
 
 ## Free-first deployment
 
@@ -42,7 +46,9 @@ Start with one local workstation, an offline preprocessing command, files on dis
 and a small local service when the first scientific provider is ready. Proposed
 scientific runtime: Python with Rasterio/GDAL, NumPy, and SpiceyPy. These are optional
 future-runtime dependencies in `backend/requirements-science.txt`; the mock API needs
-only `backend/requirements.txt`. No real calculations or kernels are configured.
+only `backend/requirements.txt`. Rasterio is offline preprocessing tooling for
+Site04, not an API runtime import. The API serves a pinned derived artifact; no
+SPICE kernels or terrain-aware visibility calculations are configured.
 Python schemas and generated OpenAPI define the HTTP boundary; retain TypeScript
 prototypes for review rather than importing them into the Python engine.
 

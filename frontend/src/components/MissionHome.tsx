@@ -41,7 +41,7 @@ export function MissionHome({ request, selected, onSelect, onDate, terrain, geom
         <div className="console-target"><span className="eyebrow">SELECTED LOCATION</span><h3>{selected.name}</h3><p>{request.latitude.toFixed(4)}° / {request.longitude.toFixed(4)}° east</p><span className="small-badge">Screening · not evaluated</span></div>
         <div className="console-site-list" aria-label="Preset locations">{landingSites.filter(s => s.id !== 'custom').map(site => <button key={site.id} aria-pressed={request.siteId === site.id} onClick={() => onSelect(site, site.id)}><Crosshair size={13} />{site.name}<ArrowUpRight size={12} /></button>)}</div>
         <h4><Radio size={14} /> Source availability</h4>
-        <dl className="console-providers"><div><dt>LOLA elevation</dt><dd>{terrain}</dd></div><div><dt>Horizons directions</dt><dd>{geometry}</dd></div><div><dt>Site04 observation coverage</dt><dd>Unavailable · not connected here</dd></div></dl>
+        <dl className="console-providers"><div><dt>LOLA elevation</dt><dd>{terrain}</dd></div><div><dt>Horizons directions</dt><dd>{geometry}</dd></div><div><dt>Site04 observation coverage</dt><dd><a href="#/landing-3d">Open separate projected X/Y grid</a> · availability checked in explorer</dd></div></dl>
         <a className="console-primary" href="#/analysis">Inspect provider results <ArrowUpRight size={15} /></a>
         <p className="console-footnote">{connected ? 'Backend connected. Analysis estimates remain demo.' : 'Backend unavailable / demo analysis.'} No evaluated suitability score or recommendation.</p>
       </aside>}

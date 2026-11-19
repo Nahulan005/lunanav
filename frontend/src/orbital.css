@@ -42,12 +42,19 @@
 .immersive-scene-label { display: none; position: fixed; left: 24px; bottom: 22px; z-index: 15; color: #8094a5; font: 9px var(--mono); pointer-events: none; }
 .cockpit-hud-hidden .topbar, .cockpit-hud-hidden .workspace-context-strip, .cockpit-hud-hidden .home-intro, .cockpit-hud-hidden .home-console, .cockpit-hud-hidden .moon3d-mode-bar, .cockpit-hud-hidden .home-grid-toggle, .cockpit-hud-hidden .home-layer-note, .cockpit-hud-hidden .home-epoch, .cockpit-hud-hidden .scene-caption, .cockpit-hud-hidden .moon3d-stage-hud, .cockpit-hud-hidden .moon3d-markers-layer, .cockpit-hud-hidden .screening-grid, .cockpit-hud-hidden .home-simulation-links, .cockpit-hud-hidden .orbital-attitude { display: none; }
 .cockpit-hud-hidden .immersive-scene-label { display: block; }
+.orbital-home .home-renderer-status { display: none; }
+.orbital-home .demo-risk-controls { position: fixed; z-index: 12; bottom: 192px; left: 245px; margin: 0; }
+.orbital-home .demo-risk-controls > span { display: none; }
+.orbital-home .demo-risk-notice { position: fixed; z-index: 14; right: 24px; bottom: 115px; width: 270px; max-height: 210px; overflow: auto; padding: 12px; background: #191c20ed; backdrop-filter: blur(12px); }
+.orbital-home .demo-risk-notice p, .orbital-home .demo-risk-notice li { font-size: 10px; }
+.cockpit-hud-hidden .demo-risk-controls, .cockpit-hud-hidden .demo-risk-notice { display: none; }
 .cockpit-hud-hidden .orbital-home .moon3d-stage { padding-left: 0; }
 #adaptive-simulation.adaptive-page { margin-left: 214px; width: calc(100% - 214px); max-width: none; padding: 30px; }
 .adaptive-title a { padding: 10px 14px; border: 1px solid #385768; border-radius: 6px; color: #99d5dd; font-size: 12px; }
 .adaptive-viewport { box-shadow: inset 0 0 60px #0008, 0 20px 65px #0005; }.adaptive-console { background: #091a26e8; }.adaptive-dialog .adaptive-controls { margin-top: 15px; }
 @media(max-width:1100px) { .home-simulation-links small { display: none; }.orbital-home .home-intro { max-width: 165px; }.orbital-home .home-intro h2 { font-size: 35px; }.orbital-home .home-console { width: 270px; }.orbital-home .home-layer-note { font-size: 9px; } }
 @media(max-width:980px) {
+  .orbital-home .demo-risk-controls { left: 18px; bottom: 230px; }
   .cockpit-home .topbar { position: fixed; bottom: auto; height: auto; width: 100%; background: #050e18bd; border-right: 0; }.cockpit-home .nav-inner { height: auto; gap: 4px; padding: 8px 14px; }.cockpit-home .workspace-badge { display: none; }.cockpit-home .nav-inner nav { flex: 0 0 100%; gap: 4px; }.cockpit-home .nav-inner nav a { flex-shrink: 0; font-size: 10px; min-height: 35px; }.cockpit-home .brand { font-size: 17px; }
   .cockpit-home .workspace-context-strip { left: 18px; top: 111px; right: 18px; max-width: none; font-size: 10px; }.orbital-home .home-intro { left: 20px; top: 190px; }.orbital-home .home-intro h2 { font-size: 32px; }
   .orbital-home .moon3d-stage { padding: 0; }.orbital-home .moon3d-canvas-container { width: min(90svh, 100vw); }.orbital-home .moon3d-stage-hud { inset: 155px 18px 190px; }
@@ -57,6 +64,7 @@
   #adaptive-simulation.adaptive-page { margin: 0; width: 100%; padding: 22px 16px; }
 }
 @media(max-width:600px) {
+  .orbital-home .demo-risk-controls { bottom: 237px; }.orbital-home .demo-risk-controls button { min-height: 28px; font-size: 9px; }.orbital-home .demo-risk-notice { bottom: 275px; right: 12px; width: min(270px, 90vw); }
   .orbital-home .home-intro { top: 160px; max-width: 160px; }.orbital-home .home-intro > div { display: none; }.orbital-home .console-toggle { margin: 0; font-size: 10px; padding: 9px; min-height: 36px; }.orbital-home .home-console { left: 12px; right: 12px; top: 205px; bottom: 230px; width: auto; padding: 16px; }
   .orbital-home .moon3d-canvas-container { width: 108vw; max-width: none; }.orbital-home .moon3d-stage { transform: translateY(8px); }.orbital-home .moon3d-stage-hud { inset: 158px 12px 230px; }.orbital-home .moon3d-hud-btn { padding: 7px; font-size: 8px; }
   .orbital-home .home-grid-toggle { bottom: 200px; font-size: 9px; }.orbital-home .moon3d-mode-bar { bottom: 106px; padding: 6px; }.orbital-home .moon3d-mode-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }.orbital-home .moon3d-mode-button { font-size: 9px; padding: 6px; min-height: 32px; }

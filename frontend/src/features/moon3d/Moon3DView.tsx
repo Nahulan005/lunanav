@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useId, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { fetchSite04CoverageResult } from '../../services/analysis'
+import type { Site04CoverageResponse } from './terrainGrid'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -25,6 +27,11 @@ import {
 } from './moon3dMockData'
 import './moon3d.css'
 import { ScreeningDetails, type SurfaceLocation } from './ScreeningDetails'
+import { Site04CoverageGrid } from './Site04CoverageGrid'
+import { OverallRiskStatus } from './OverallRiskStatus'
+import { DEMO_RISK_BANDS, demoBandForSite, demoPatchBoundary, clipDemoPatch } from './demoRiskOverlay'
+
+const MoonScene = lazy(() => import('./MoonScene'))
 
 interface ProjectedCoords {
   x: number
@@ -80,31 +87,43 @@ function projectPoint(
   return { x: x2, y: y2, z: z2, screenX, screenY, visible, scale, opacity }
 }
 
-export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = false, initialLocation, onLocationSelect }: { initialSelectedId?: string; date?: string; compact?: boolean; initialLocation?: SurfaceLocation; onLocationSelect?: (location: SurfaceLocation, presetId?: string) => void }) {
+export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03-15', compact = false, onLocationSelect }: { initialSelectedId?: string; initialLocation?: SurfaceLocation; date?: string; compact?: boolean; onLocationSelect?: (location: SurfaceLocation, presetId?: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [webglReady, setWebglReady] = useState(false)
+  const [webglUnavailable, setWebglUnavailable] = useState(false)
+  const reportReady = useCallback(() => setWebglReady(true), [])
+  const reportUnavailable = useCallback(() => { setWebglReady(false); setWebglUnavailable(true) }, [])
   const stageRef = useRef<HTMLDivElement | null>(null)
 
   const [rotX, setRotX] = useState<number>(DEFAULT_ROT_X)
   const [rotY, setRotY] = useState<number>(DEFAULT_ROT_Y)
   const [autoRotate, setAutoRotate] = useState<boolean>(false)
   const [showCoordinateGrid, setShowCoordinateGrid] = useState(false)
+  const [showDemoRisk, setShowDemoRisk] = useState(false)
   type Selection = { kind: 'preset'; site: Moon3DLandingSite } | { kind: 'point'; latitude: number; longitude: number }
   const [selection, setSelection] = useState<Selection>(() => {
     const site = MOON3D_LANDING_SITES.find((item) => item.id === (initialSelectedId ?? 'shackleton'))
-    return site ? { kind: 'preset', site } : { kind: 'point', latitude: initialLocation?.latitude ?? 0, longitude: initialLocation?.longitude ?? 0 }
+    const point = initialLocation && Number.isFinite(initialLocation.latitude) && Math.abs(initialLocation.latitude) <= 90
+      && Number.isFinite(initialLocation.longitude) && Math.abs(initialLocation.longitude) <= 180 ? initialLocation : null
+    if (site && (!point || (site.latitude === point.latitude && site.longitude === point.longitude))) return { kind: 'preset', site }
+    return { kind: 'point', latitude: point?.latitude ?? 0, longitude: point?.longitude ?? 0 }
   })
   const surface: SurfaceLocation = selection.kind === 'preset' ? selection.site : selection
+  const setSurface = (point: SurfaceLocation) => { setSelection({ kind: 'point', ...point }); onLocationSelect?.(point) }
   useEffect(() => {
     if (!compact) return
-    const site = MOON3D_LANDING_SITES.find((item) => item.id === initialSelectedId)
+    const site = MOON3D_LANDING_SITES.find(item => item.id === initialSelectedId)
     if (site) setSelection({ kind: 'preset', site })
   }, [initialSelectedId, compact])
-  const setSurface = (point: SurfaceLocation) => { setSelection({ kind: 'point', ...point }); onLocationSelect?.(point) }
   const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('none')
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 440,
     height: 440,
   })
+  const [site04Coverage, setSite04Coverage] = useState<Site04CoverageResponse | null>(null)
+  const [coverageLoading, setCoverageLoading] = useState(true)
+  const [coverageError, setCoverageError] = useState<string | null>(null)
+  const [coverageAttempt, setCoverageAttempt] = useState(0)
 
   // Pointer drag state
   const isPointerDownRef = useRef(false)
@@ -118,8 +137,31 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
   const dragSuppressionTimerRef = useRef<number | null>(null)
 
   const selectedSite = selection.kind === 'preset' ? selection.site : null
-  const activeHeatmap = HEATMAP_CONFIGS[heatmapMode]
+  const activeHeatmap = heatmapMode === 'feasibility' ? {
+    ...HEATMAP_CONFIGS.feasibility,
+    label: 'Overall risk — not evaluated',
+    shortCode: 'RISK / UNKNOWN',
+    description: 'Real risk remains Unknown. Any enabled coloured patches are separate illustrative demo artwork. Dashed display cells are selection boundaries only.',
+    disclaimer: 'No risk score is computed. Site-scale slope, terrain horizons, duration inputs, registration and configured thresholds are missing.',
+  } : HEATMAP_CONFIGS[heatmapMode]
   const screening = heatmapMode === 'feasibility'
+  const demoRiskVisible = showDemoRisk && screening
+  // Fetch Site04 observation coverage from the backend
+  useEffect(() => {
+    let active = true
+
+    fetchSite04CoverageResult()
+      .then(({ data, error }) => {
+        if (active) { setSite04Coverage(data); setCoverageError(error) }
+      })
+      .finally(() => {
+        if (active) setCoverageLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [coverageAttempt])
 
   // ResizeObserver for responsive canvas resolution
   useEffect(() => {
@@ -388,8 +430,8 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
   }, [dimensions, rotX, rotY, heatmapMode, screening])
 
   useEffect(() => {
-    drawMoon()
-  }, [drawMoon])
+    if (!webglReady) drawMoon()
+  }, [drawMoon, webglReady])
 
   // Pointer drag interaction handlers (Mouse + Touch)
   const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -525,6 +567,13 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
     proj: projectPoint(site.latitude, site.longitude, rotX, rotY, radius, cx, cy),
   }))
 
+  const demoPatches = demoRiskVisible ? MOON3D_LANDING_SITES.map(site => ({
+    site,
+    band: demoBandForSite(site.id),
+    points: clipDemoPatch(demoPatchBoundary(site.latitude, site.longitude).map(point =>
+      projectPoint(point.latitude, point.longitude, rotX, rotY, radius, cx, cy))),
+  })) : []
+
   const centerLatDeg = (-rotX * 180) / Math.PI
   const centerLonDeg = (-rotY * 180) / Math.PI
   const formatCoord = (deg: number, pos: string, neg: string) => {
@@ -537,7 +586,8 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
   return (
     <section className={`moon3d-panel ${compact ? 'moon3d-compact' : ''}`} aria-label={compact ? 'Interactive lunar scene' : undefined} aria-labelledby={compact ? undefined : headingId}>
       {/* Component Header */}
-      {!compact && <div className="moon3d-header">
+      {!compact && <>
+      <div className="moon3d-header">
         <div className="moon3d-title-group">
           <div className="moon3d-eyebrow">
             <span className="moon3d-eyebrow-line" />
@@ -563,23 +613,26 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
             ILLUSTRATIVE DEMO
           </span>
         </div>
-      </div>}
+      </div>
 
+      </>}
       {/* Heatmap Mode Selector Bar */}
-      {!compact && <div className="screening-legend">
-        <strong>Illustrative/demo only · Combined classification unavailable</strong>
-        <p>Real/model-derived: point data in selected-location details. Planned: validated spatial suitability. Mock: preset-node layers and fixture details only.</p>
-        <div className="screening-symbols"><span className="screen-pass">✓ GREEN · all configured requirements pass with margin</span><span className="screen-review">! ORANGE · near threshold / non-critical issue</span><span className="screen-fail">✕ RED · mandatory requirement failed</span><span className="screen-unknown">? GREY · missing / insufficient data (all current zones)</span></div>
-        <p>Legend definitions are planned evaluation rules. No current zone has the required validated data; all remain ?. Boundaries show geographic display cells, not a calculated heatmap.</p>
+      {!compact && <>
+      <div className="screening-legend">
+        <strong>Real coverage and model-derived point context · Overall risk not evaluated</strong>
+        <p>Real risk stays Unknown because required inputs are unavailable. Toggle Demo Risk Overlay for decorative preset patches; their colours and sizes are artwork fixtures, not calculated results.</p>
+        <div className="screening-symbols"><span className="screen-unknown">? GREY / Unknown — insufficient required data; no score</span></div>
+        <p>Dashed cells are selection boundaries only. No validated spatial risk coverage is available.</p>
         <label><input type="checkbox" checked={showCoordinateGrid} onChange={(event) => setShowCoordinateGrid(event.target.checked)} /> Show coordinate grid</label>
-        <p>Optional coordinate grid: solid labeled latitude/longitude lines. Screening-cell boundaries: dashed, shown only in Landing Feasibility mode.</p>
+        <p>Optional coordinate grid: solid labeled latitude/longitude lines. Screening-cell boundaries: dashed, shown only in Overall Risk mode.</p>
         <p>Click any visible surface point to inspect it; drag to rotate. Coordinate selection is also available below. Colored nodes represent fixed preset fixtures only; no whole-surface heatmap is inferred.</p>
         <div className="screening-coordinate-controls">
           <label>Selected latitude (°)<input type="number" min="-90" max="90" step="any" value={surface.latitude} onChange={(e) => { const n = e.target.valueAsNumber; if (Number.isFinite(n) && Math.abs(n) <= 90) { setSurface({ ...surface, latitude: n }); setAutoRotate(false) } }} /></label>
           <label>Selected east longitude (°)<input type="number" min="-180" max="180" step="any" value={surface.longitude} onChange={(e) => { const n = e.target.valueAsNumber; if (Number.isFinite(n) && Math.abs(n) <= 180) { setSurface({ ...surface, longitude: n }); setAutoRotate(false) } }} /></label>
         </div>
-      </div>}
-      {compact && <label className="home-grid-toggle"><input type="checkbox" checked={showCoordinateGrid} onChange={(event) => setShowCoordinateGrid(event.target.checked)} /> Coordinate grid</label>}
+      </div>
+      </>}
+      {compact && <label className="home-grid-toggle"><input type="checkbox" checked={showCoordinateGrid} onChange={event => setShowCoordinateGrid(event.target.checked)} /> Coordinate grid</label>}
       <div className="moon3d-mode-bar" role="toolbar" aria-label="Heatmap overlay modes">
         <span className="moon3d-mode-label">
           <Layers size={13} />
@@ -619,11 +672,26 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
             aria-pressed={heatmapMode === 'feasibility'}
           >
             <ShieldCheck size={13} />
-            Landing Feasibility
+            Overall Risk · Unknown
           </button>
         </div>
       </div>
 
+      <div className="demo-risk-controls">
+        <button type="button" className={`moon3d-mode-button ${demoRiskVisible ? 'active' : ''}`}
+          aria-pressed={demoRiskVisible} onClick={() => { setShowDemoRisk(!demoRiskVisible); setHeatmapMode('feasibility') }}>
+          Demo Risk Overlay · {demoRiskVisible ? 'ON' : 'OFF'}
+        </button>
+        <span>Illustrative artwork around preset nodes. No calculated risk or measured coverage.</span>
+      </div>
+      {demoRiskVisible && <section className="demo-risk-notice" aria-label="Demo risk overlay legend">
+        <strong>ILLUSTRATIVE DEMO ONLY · coloured preset patches</strong>
+        <p>Colours are explicitly assigned presentation fixtures, not derived from scores, NASA data, or thresholds. Patch size is a decorative 8-degree radius, not a measured influence area. Outside patches stays grey / Unknown.</p>
+        <ul>{Object.values(DEMO_RISK_BANDS).map(band => <li key={band.label}><span style={{ background: band.color }} aria-hidden="true">{band.symbol}</span>{band.label}</li>)}<li><span className="demo-risk-grey" aria-hidden="true">?</span>Grey: no demo patch / real risk Unknown</li></ul>
+        <p>{selectedSite ? `${selectedSite.name}: ${demoBandForSite(selectedSite.id)?.label ?? 'No demo category'}. Preset identity only; no risk calculation.` : 'Arbitrary selected point: real risk Unknown; patch colour does not assign this point a result.'}</p>
+      </section>}
+
+      <p className={`moon3d-renderer-status ${compact ? 'home-renderer-status' : ''}`} role="status">{webglReady ? '3D renderer: WebGL / React Three Fiber' : webglUnavailable ? 'WebGL unavailable: using the existing 2D fallback' : 'Preparing 3D renderer; 2D fallback active'} · Surface texture and lighting are decorative, not measured terrain or Horizons sunlight.</p>
       {/* Main Content Grid: Viewport Stage + Inspector Sidebar */}
       <div className="moon3d-grid">
         {/* 3D Viewport Stage */}
@@ -641,22 +709,34 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
             role="region"
             aria-label="Interactive 3D Moon sphere. Drag with mouse or finger to rotate."
           >
-            <canvas ref={canvasRef} className="moon3d-canvas" style={heatmapMode === 'none' ? { filter: 'grayscale(1)' } : undefined} />
+            <canvas ref={canvasRef} className="moon3d-canvas" data-renderer={webglReady ? 'webgl' : '2d-fallback'} style={webglReady ? { opacity: 0 } : heatmapMode === 'none' ? { filter: 'grayscale(1)' } : undefined} />
+            {!webglUnavailable && <div className="moon3d-webgl" aria-hidden="true"><Suspense fallback={null}>
+              <MoonScene rotationX={rotX} rotationY={rotY} size={dimensions.width} onReady={reportReady} onUnavailable={reportUnavailable} />
+            </Suspense></div>}
             <svg className="screening-grid" width={dimensions.width} height={dimensions.height} aria-hidden="true">
               {screening && <><circle cx={cx} cy={cy} r={radius} fill="#8899aa" fillOpacity=".65" />
                 {gridPaths.map((points, i) => <polygon key={i} points={points} fill="none" stroke="#dee6ee" strokeOpacity=".65" strokeDasharray="3 2" />)}
 </>}
+              {demoRiskVisible && <g className="demo-risk-patches">
+                <defs><clipPath id={`${headingId}-demo-clip`}><circle cx={cx} cy={cy} r={radius} /></clipPath></defs>
+                <g clipPath={`url(#${headingId}-demo-clip)`}>
+                  {demoPatches.map(({ site, band, points }) => band && points && <polygon key={site.id}
+                    data-demo-site={site.id} points={points} fill={band.color} fillOpacity=".8"
+                    stroke={band.color} strokeWidth="2" strokeDasharray="4 2" />)}
+                </g>
+                <text x={cx} y={cy - radius + 20} textAnchor="middle" fill="white" stroke="#07121d" strokeWidth="3" paintOrder="stroke" fontSize="12">DEMO PATCHES · NOT CALCULATED RISK</text>
+              </g>}
               {showCoordinateGrid && coordinateLines.map(({ key, path, label, x, y }) => <g key={key}>
                 <path d={path} fill="none" stroke="#b9c2cb" strokeWidth="1" />
                 <text x={x} y={y} fill="#e1f6ff" stroke="#07121d" strokeWidth="2" paintOrder="stroke" fontSize="10">{label}</text>
               </g>)}
-              {surfaceProjection.visible && <g><circle cx={surfaceProjection.screenX} cy={surfaceProjection.screenY} r="7" fill="#0c2134" stroke="white" strokeWidth="2" /><text x={surfaceProjection.screenX + 10} y={surfaceProjection.screenY} fill="white">{selectedSite ? 'Demo preset' : 'Selected ?'}</text></g>}
+              {surfaceProjection.visible && <g><circle cx={surfaceProjection.screenX} cy={surfaceProjection.screenY} r="7" fill="#0c2134" stroke="white" strokeWidth="2" /><text x={surfaceProjection.screenX + 10} y={surfaceProjection.screenY} fill="white">{screening ? 'Unknown' : selectedSite ? 'Demo preset' : 'Selected'}</text></g>}
             </svg>
 
             {/* Accessible Landing Site Markers Layer */}
             <div className="moon3d-markers-layer">
               {projectedSites.map(({ site, proj }) => {
-                if (!proj.visible) return null
+                if (!proj.visible || (screening && !demoRiskVisible)) return null
                 const isSelected = selection.kind === 'preset' && selection.site.id === site.id
                 return (
                   <button
@@ -679,7 +759,7 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
                     <div className="moon3d-pin-target">
                       <div className="moon3d-pin-pulse" />
                     </div>
-                    {heatmapMode !== 'none' && <span className="moon3d-node-value">{heatmapMode === 'sunlight' ? `${site.sunlightPct}% demo` : heatmapMode === 'earth-visibility' ? `${site.earthVisibilityPct}% demo` : 'Demo fixture'}</span>}
+                    {heatmapMode !== 'none' && <span className="moon3d-node-value">{demoRiskVisible ? `${demoBandForSite(site.id)?.symbol ?? '?'} Demo` : heatmapMode === 'sunlight' ? `${site.sunlightPct}% demo` : heatmapMode === 'earth-visibility' ? `${site.earthVisibilityPct}% demo` : 'Demo fixture'}</span>}
                     <span className="moon3d-marker-tag">
                       {site.name} ({site.latitude.toFixed(1)}°, {site.longitude.toFixed(1)}°)
                     </span>
@@ -735,13 +815,17 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
 
         {/* Sidebar: Selected Site Inspector + Heatmap Legend */}
         {!compact && <div className="moon3d-sidebar">
-          <div className="moon3d-inspector" aria-live="polite">
-            <h3>{activeHeatmap.label}</h3>
-            <p className="moon3d-site-desc">Selected location: {surface.latitude.toFixed(4)}&deg; latitude / {surface.longitude.toFixed(4)}&deg; east longitude.</p>
-            <p className="moon3d-site-desc">{activeHeatmap.description}</p>
-            <p className="moon3d-site-desc">{activeHeatmap.disclaimer}</p>
-            <strong>Screening result: ? Grey / Unknown</strong>
-          </div>
+          {screening && <OverallRiskStatus location={surface} date={date} coverage={site04Coverage} loading={coverageLoading} />}
+          {!screening && <><div className="moon3d-inspector" aria-live="polite">
+  <h3>{activeHeatmap.label}</h3>
+  <p className="moon3d-site-desc">Selected location: {surface.latitude.toFixed(4)}&deg; latitude / {surface.longitude.toFixed(4)}&deg; east longitude.</p>
+  <p className="moon3d-site-desc">{activeHeatmap.description}</p>
+  <p className="moon3d-site-desc">{activeHeatmap.disclaimer}</p>
+
+  <strong>Screening result: ? Grey / Unknown</strong>
+</div>
+
+
           <div className="moon3d-inspector" aria-live="polite">
             <h3>{selectedSite ? selectedSite.name : 'Selected surface location'}</h3>
             <strong>{selectedSite ? 'Demo preset · not calculated.' : 'Unknown · not enough data to determine.'}</strong>
@@ -761,6 +845,7 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
             <p>Surface screening remains unknown: no validated site-scale slope, terrain horizons, or configured thresholds. No justified recommendation.</p>
           </div>
 
+          </>}
           {/* Interactive Heatmap Legend */}
           <div className="moon3d-legend-card" aria-label="Heatmap legend">
             <div className="moon3d-legend-head">
@@ -802,8 +887,10 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
         </div>}
       </div>
 
+      {!compact && <>
+      <Site04CoverageGrid data={site04Coverage} loading={coverageLoading} error={coverageError} onRetry={() => { setSite04Coverage(null); setCoverageError(null); setCoverageLoading(true); setCoverageAttempt(n => n + 1) }} />
       {/* Global Module Disclaimer */}
-      {!compact && <><h3>Selected-coordinate provider context · separate from demo fixtures</h3>
+      <h3>Selected-coordinate provider context · separate from demo fixtures</h3>
       <ScreeningDetails key={`${surface.latitude},${surface.longitude},${date}`} location={surface} date={date} />
       <div className="moon3d-disclaimer-banner">
         <CheckCircle2 size={16} />
@@ -811,7 +898,8 @@ export function Moon3DView({ initialSelectedId, date = '2027-03-15', compact = f
           <strong>Demo Notice:</strong>
           {MOON3D_DISCLAIMER}
         </div>
-      </div></>}
+      </div>
+      </>}
       {compact && <p className="home-layer-note" role="status">{activeHeatmap.description} {activeHeatmap.disclaimer}</p>}
     </section>
   )

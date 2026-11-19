@@ -197,7 +197,7 @@ export const MOON3D_LANDING_SITES: readonly Moon3DLandingSite[] = [
     terrainObstructionPct: 17,
     historicalContext: 'High-Albedo Pyroclastic Feature',
     description:
-      'Brightest large feature on the lunar nearside, hosting the sinuous rille Vallis SchrÃ¶teri and extensive pyroclastic glass deposits.',
+      'Brightest large feature on the lunar nearside, hosting the sinuous rille Vallis Schröteri and extensive pyroclastic glass deposits.',
     targetType: 'volcanic-dome',
   },
 ]

@@ -797,3 +797,61 @@ footer i { width: 3px; height: 3px; background: #6484a2; border-radius: 50%; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+.schedule-site-context {
+  display: grid;
+  gap: 7px;
+  padding: 16px;
+  margin: 18px 0;
+  border: 1px solid #345364;
+  border-radius: 5px;
+}
+
+.schedule-site-context p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #91adbf;
+  font-size: 12px;
+}
+
+.schedule-site-context strong {
+  color: #d4e7f1;
+  font-size: 16px;
+}
+
+.schedule-site-context span {
+  color: #9fb4c2;
+  font-size: 12px;
+}
+
+.schedule-geometry,
+.schedule-window-status {
+  padding: 22px;
+  margin-top: 20px;
+}
+
+.schedule-geometry .geometry-readings {
+  margin-top: 18px;
+}
+
+.schedule-window-status > div {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2fr);
+  gap: 20px;
+  padding: 15px 0;
+  border-top: 1px solid #263b49;
+  font-size: 12px;
+}
+
+.schedule-window-status > div strong {
+  color: #c7dce7;
+}
+
+@media (max-width: 600px) {
+  .schedule-window-status > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+}

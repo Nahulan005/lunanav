@@ -10,7 +10,10 @@ from pathlib import Path
 import struct
 
 from app.schemas.analysis import AnalysisRequest, Provenance, ProviderResult, TerrainResult
-from app.schemas.terrain import Coordinate, Pixel, SampleValidation, TerrainSampleResponse
+from app.schemas.terrain import (
+    Coordinate, Pixel, SampleValidation, TerrainSampleResponse, TerrainProfile,
+    TerrainProfileSample, TerrainGridResolution, NeighborDirection,
+)
 
 BACKEND = Path(__file__).resolve().parents[2]
 SOURCE_URL = "https://pds-geosciences.wustl.edu/lro/lro-l-lola-3-rdr-v1/lrolol_1xxx/data/lola_gdr/cylindrical/img/ldem_4.img"
@@ -100,6 +103,90 @@ class LolaTerrainProvider:
                 checks=manifest["validation"]["checks"] + ["runtime subset/label SHA-256", "runtime range and bounds"],
                 coordinate_roundtrip_passed=True, roundtrip_source_pixel=roundtrip),
             limitations=manifest["limitations"] + [manifest["nodata_policy"]],
+        )
+
+    def profile(self, latitude: float, longitude: float) -> TerrainProfile:
+        """Bounded cross profile; reuse sample() without altering its behavior."""
+        center = self.sample(latitude, longitude)
+        # sample() validates this specific LDEM_4 product at exactly 4 pixels/degree.
+        step_deg = 0.25
+        offsets: tuple[tuple[NeighborDirection, float, float], ...] = (
+            ("north", step_deg, 0.0), ("east", 0.0, step_deg),
+            ("south", -step_deg, 0.0), ("west", 0.0, -step_deg),
+        )
+        neighbors: list[TerrainProfileSample] = []
+        missing: list[NeighborDirection] = []
+        heights: dict[NeighborDirection, float] = {}
+        for direction, latitude_offset, longitude_offset in offsets:
+            try:
+                neighbor = self.sample(
+                    center.coordinate_used.latitude + latitude_offset,
+                    center.coordinate_used.longitude + longitude_offset,
+                )
+            except TerrainSampleError as error:
+                if error.code != "OUTSIDE_LOCAL_COVERAGE":
+                    # Missing/corrupt files and invalid samples remain explicit errors.
+                    raise
+                missing.append(direction)
+                continue
+            if neighbor.checksum != center.checksum or neighbor.subset_checksum != center.subset_checksum:
+                raise TerrainSampleError("DATA_CHANGED_DURING_PROFILE", "Source or subset changed while reading neighbors; no profile returned.")
+            neighbors.append(TerrainProfileSample(
+                direction=direction, coordinate_used=neighbor.coordinate_used,
+                source_pixel=neighbor.source_pixel, subset_pixel=neighbor.subset_pixel,
+                elevation_value=neighbor.elevation_value,
+            ))
+            heights[direction] = neighbor.elevation_value
+
+        # Reference-sphere arc lengths; latitude-dependent east/west distance.
+        # This estimates a coarse grid gradient, not within-cell terrain roughness.
+        dy = center.reference_radius_m * math.radians(step_deg)
+        dx = dy * math.cos(math.radians(center.coordinate_used.latitude))
+        slope = None
+        reason = None
+        if missing:
+            reason = "Central differences require north, east, south, and west neighbors; outside local coverage: " + ", ".join(missing) + ". No one-sided estimate is substituted."
+        else:
+            north_gradient = (heights["north"] - heights["south"]) / (2 * dy)
+            east_gradient = (heights["east"] - heights["west"]) / (2 * dx)
+            slope = math.degrees(math.atan(math.hypot(north_gradient, east_gradient)))
+
+        elevations = [center.elevation_value] + [sample.elevation_value for sample in neighbors]
+        # Keep original sample limitations separately; replace only statements that
+        # describe the old single-cell scope in the profile's own limitations.
+        limitations = [text for text in center.limitations if text not in (
+            "One containing-cell sample; no interpolation or site-scale terrain analysis.",
+            "No slope, horizon, SPICE, radio link, or landing-safety assessment.",
+        )] + [
+            "Only the center and available cardinal cells are sampled; no interpolation or region-wide extrema.",
+            "Slope is an unvalidated central-difference grid-gradient estimate over two-cell baselines, not within-cell slope or roughness.",
+            "Distances use the reference sphere and center latitude, not terrain-following distances.",
+            "Missing cardinal neighbors produce null slope; corrupt or invalid data produces an error.",
+            "No other terrain analyses or operational assessment are performed.",
+        ]
+        fields = center.model_dump()
+        fields["limitations"] = limitations
+        return TerrainProfile(
+            **fields, neighbor_samples=neighbors, missing_neighbors=missing,
+            sample_count=len(elevations), minimum_elevation=min(elevations),
+            maximum_elevation=max(elevations), elevation_range=max(elevations) - min(elevations),
+            slope_deg=slope, slope_reason=reason,
+            grid_resolution=TerrainGridResolution(
+                latitude_step_deg=step_deg, longitude_step_deg=step_deg,
+                source_label_projected_spacing_m=7580.84,
+                north_south_spacing_m=dy, east_west_spacing_m=dx,
+                source_rows=720, source_columns=1440, subset_rows=64, subset_columns=64,
+            ),
+            provenance=Provenance(
+                mode="local-derived", provider=type(self).__name__,
+                algorithm_version="ldem4-cardinal-profile-v1", source_ids=["lola"],
+                dataset_ids=["LDEM_4 V3.0"], validation="unvalidated",
+                assumptions=[
+                    "All samples reuse the existing audited cutout reader and height conversion.",
+                    "Input coordinates already use the source lunar frame.",
+                    "The containing cell center is used, preserving the sample endpoint's registration and boundary rules.",
+                ], limitations=limitations,
+            ), source_limitations=center.limitations,
         )
 
     def get_terrain(self, request: AnalysisRequest) -> ProviderResult[TerrainResult]:

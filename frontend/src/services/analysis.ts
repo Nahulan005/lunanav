@@ -1,12 +1,14 @@
 import { demoAnalyses, type AnalysisRequest, type DemoAnalysis } from '../data/mockData'
+import { isSite04CoverageResponse, type Site04CoverageResponse } from '../features/moon3d/terrainGrid'
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/+$/, '') || 'http://127.0.0.1:8000'
 export const HEALTH_ENDPOINT = `${API_BASE_URL}/api/v1/health`
 export const ANALYSIS_ENDPOINT = `${API_BASE_URL}/api/v1/analysis`
 export const TERRAIN_SAMPLE_ENDPOINT = `${API_BASE_URL}/api/v1/terrain/sample`
+export const SITE04_COVERAGE_ENDPOINT = `${API_BASE_URL}/api/v1/terrain/site04/coverage`
 
-// Short timeout to ensure offline fallback happens immediately without waiting
-const REQUEST_TIMEOUT_MS = 2000
+// Bounded allowance for a deployed backend to respond; retries are user initiated.
+const REQUEST_TIMEOUT_MS = 15000
 
 export interface BackendHealthResponse {
   status: string
@@ -148,15 +150,37 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
   }
 }
 
-export async function checkBackendHealth(): Promise<boolean> {
+/** Keep the timeout active through JSON decoding, not just response headers. */
+async function requestJson(url: string): Promise<unknown> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    const res = await fetchWithTimeout(HEALTH_ENDPOINT, { method: 'GET' })
-    if (!res.ok) return false
-    const data: BackendHealthResponse = await res.json()
-    return data.status === 'ok'
-  } catch {
-    return false
-  }
+    const response = await fetch(url, { signal: controller.signal })
+    if (!response.ok) throw new Error(`Backend returned HTTP ${response.status}.`)
+    try { return await response.json() as unknown }
+    catch (error) {
+      if (controller.signal.aborted) throw error
+      throw new Error('Invalid response: backend did not return readable JSON.')
+    }
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error('Request timed out after 15 seconds. Retry to check again.')
+    if (error instanceof TypeError) throw new Error('Backend unreachable: check connectivity, API URL, or CORS settings.')
+    throw error
+  } finally { clearTimeout(timer) }
+}
+const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Backend request failed.'
+
+export async function checkBackendHealthResult(): Promise<{ connected: boolean; error: string | null }> {
+  try {
+    const data = await requestJson(HEALTH_ENDPOINT)
+    if (typeof data !== 'object' || !data || !('status' in data) || data.status !== 'ok') {
+      return { connected: false, error: 'Backend health unavailable: no valid OK status returned.' }
+    }
+    return { connected: true, error: null }
+  } catch (error) { return { connected: false, error: errorMessage(error) } }
+}
+export async function checkBackendHealth(): Promise<boolean> {
+  return (await checkBackendHealthResult()).connected
 }
 
 export async function analyzeMissionDemo(request: AnalysisRequest): Promise<DemoAnalysis> {
@@ -204,7 +228,7 @@ export async function analyzeMission(request: AnalysisRequest): Promise<AnalyzeM
   }
 }
 
-export async function fetchTerrainSample(latitude: number, longitude: number): Promise<TerrainSampleResult | null> {
+export async function fetchTerrainSample(latitude: number, longitude: number, onError?: (message: string) => void): Promise<TerrainSampleResult | null> {
   if (!isWithinLolaCoverage(latitude, longitude)) {
     return {
       sample: {
@@ -218,18 +242,25 @@ export async function fetchTerrainSample(latitude: number, longitude: number): P
 
   const url = `${TERRAIN_SAMPLE_ENDPOINT}?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}`
   try {
-    const res = await fetchWithTimeout(url, { method: 'GET' })
-    if (!res.ok) {
-      return null
+    const data = await requestJson(url) as TerrainSample
+    if (!data || data.mode !== 'local-derived' || !Number.isFinite(data.elevation_value)
+      || data.coordinate_requested?.latitude !== latitude || data.coordinate_requested?.longitude !== longitude) {
+      throw new Error('Invalid response: terrain sample does not match the selected coordinates.')
     }
-
-    const data: TerrainSample = await res.json()
-    return {
-      sample: data,
-      isFallback: false,
-      isOutOfCoverage: false,
-    }
-  } catch {
+    return { sample: data, isFallback: false, isOutOfCoverage: false }
+  } catch (error) {
+    onError?.(errorMessage(error))
     return null
   }
+}
+
+export async function fetchSite04CoverageResult(): Promise<{ data: Site04CoverageResponse | null; error: string | null }> {
+  try {
+    const data = await requestJson(SITE04_COVERAGE_ENDPOINT)
+    if (!isSite04CoverageResponse(data)) return { data: null, error: 'Invalid response: Site04 coverage payload did not match the supported contract.' }
+    return { data, error: data.status === 'unavailable' ? `Data unavailable: ${data.detail}` : null }
+  } catch (error) { return { data: null, error: errorMessage(error) } }
+}
+export async function fetchSite04Coverage(): Promise<Site04CoverageResponse | null> {
+  return (await fetchSite04CoverageResult()).data
 }
