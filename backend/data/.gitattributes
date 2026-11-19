@@ -2,3 +2,5 @@
 metadata/ldem_4.lbl -text
 metadata/ldem_4.xml -text
 raw/ldem_4_apollo17_cutout.bin -text
+# The derived response is also verified by its exact byte checksum.
+processed/site04_coverage_window.json -text

@@ -1,0 +1,90 @@
+/* The Home observation deck shares the existing sphere and selection handlers. */
+.cockpit-home body { overflow: hidden; }
+.cockpit-home #planner.home-workspace { margin: 0; width: 100%; max-width: none; padding: 0; height: 100svh; }
+.cockpit-home .home-workspace footer, .cockpit-home .home-workspace .page-heading { display: none; }
+.cockpit-home .topbar { background: linear-gradient(90deg, #050c16f2, #08131ae0); box-shadow: none; border-right-color: #7196a62b; }
+.cockpit-home .workspace-context-strip { position: fixed; z-index: 11; top: 22px; left: 240px; right: 185px; width: fit-content; max-width: calc(100vw - 430px); padding: 9px 13px !important; background: #05121ac9; backdrop-filter: blur(12px); margin: 0; border-color: #54889940; }
+.cockpit-home .workspace-context-strip > span:last-child { display: none; }
+.orbital-home { min-height: 100svh; }
+.orbital-home .home-scene-grid { position: fixed; inset: 0; display: block; }
+.orbital-home .cosmic-scene { position: absolute; inset: 0; border: 0; border-radius: 0; background: radial-gradient(ellipse at 69% 52%, #21374738, transparent 53%), radial-gradient(ellipse at 84% 21%, #57608b20, transparent 25%), radial-gradient(circle, #deedffb0 .6px, transparent 1px), radial-gradient(circle, #b4c5da60 .6px, transparent 1.2px), #02050c; background-size: auto, auto, 127px 137px, 73px 91px, auto; }
+.orbital-home .moon3d-compact { position: absolute; inset: 0; padding: 0; background: none; }
+.orbital-home .moon3d-grid { position: absolute; inset: 0; }
+.orbital-home .moon3d-stage { position: absolute; inset: 0; height: 100%; min-height: 0; padding: 0 0 0 160px; overflow: visible; }
+.orbital-home .moon3d-canvas-container { width: min(103svh, calc(100vw - 230px)); max-width: 1400px; flex-shrink: 0; margin: 0; }
+.orbital-home .moon3d-canvas { box-shadow: none; }
+.orbital-home .moon3d-stage-hud { inset: 126px 24px 160px 245px; pointer-events: none; }
+.orbital-home .moon3d-hud-top { justify-content: flex-end; }.orbital-home .moon3d-hud-coords { display: none; }
+.orbital-home .moon3d-hud-actions { pointer-events: auto; }.orbital-home .moon3d-hud-btn { background: #08121abf; border-color: #6a93a83d; backdrop-filter: blur(12px); }
+.orbital-home .moon3d-hud-bottom { display: none; }
+.orbital-home .home-intro { position: fixed; z-index: 9; top: 130px; left: 245px; margin: 0; max-width: 220px; display: block; pointer-events: none; }
+.orbital-home .home-intro .eyebrow { font-size: 8px; letter-spacing: 1.5px; line-height: 1.8; max-width: 190px; }
+.orbital-home .home-intro h2 { font-size: clamp(27px, 3.4vw, 54px); letter-spacing: -2px; line-height: 1.08; margin: 15px 0; font-weight: 350; text-shadow: 0 2px 20px #000; }
+.orbital-home .home-intro p { font-size: 11px; max-width: 185px; line-height: 1.8; color: #90a7b7; }
+.orbital-home .console-toggle { pointer-events: auto; margin-top: 22px; background: #07141a9c; border: 1px solid #6994a65c; font-size: 11px; backdrop-filter: blur(10px); }
+.hud-visibility-toggle { position: fixed; z-index: 55; right: 24px; top: 22px; min-height: 40px; display: flex; gap: 9px; align-items: center; padding: 10px 14px; border: 1px solid #6a8f9b61; border-radius: 6px; background: #06101cbe; color: #c1dfe5; font: 11px var(--mono); backdrop-filter: blur(12px); }
+.orbital-home .home-console { position: fixed; z-index: 20; top: 160px; right: 24px; width: 290px; max-height: calc(100svh - 350px); overflow-y: auto; background: #07131fe8; backdrop-filter: blur(20px); border: 1px solid #54818e73; box-shadow: 0 15px 70px #0009; }
+.orbital-home .console-target { margin-top: 20px; }.orbital-home .console-target h3 { font-size: 21px; }
+.orbital-home .scene-caption { position: absolute; z-index: 5; bottom: 185px; left: 245px; padding: 0; pointer-events: none; font-size: 8px; }.orbital-home .scene-caption > span { display: none; }
+.orbital-home .home-grid-toggle { position: fixed; z-index: 11; bottom: 157px; left: 245px; margin: 0; background: #05101bbb; padding: 6px 9px; border-radius: 4px; }
+.orbital-home .moon3d-mode-bar { position: fixed; z-index: 11; left: 245px; bottom: 99px; margin: 0; max-width: calc(100vw - 270px); background: #07121cd9; border-color: #547e8b61; backdrop-filter: blur(18px); }
+.orbital-home .moon3d-mode-pills { gap: 5px; }.orbital-home .moon3d-mode-button { font-size: 10px; min-height: 35px; }
+.orbital-home .home-layer-note { position: fixed; z-index: 11; bottom: 64px; left: 245px; max-width: calc(100vw - 285px); padding: 0; font-size: 10px; line-height: 1.5; color: #8fa6b5; pointer-events: none; }
+.orbital-home .home-epoch { position: fixed; z-index: 11; bottom: 20px; left: 245px; right: 24px; padding: 9px 14px; margin: 0; gap: 12px; border-color: #547e8b40; background: #06111ac4; backdrop-filter: blur(14px); }
+.orbital-home .home-epoch label { font-size: 10px; }.orbital-home .home-epoch label span, .orbital-home .home-epoch > span { display: none; }.orbital-home .home-epoch input { height: 30px; min-height: 30px; width: 145px; font-size: 11px; }
+.orbital-home .home-scene-foot { display: none; }
+.orbital-home .scene-earth { z-index: -1; top: 10%; left: 20%; width: clamp(50px, 5vw, 80px); height: auto; aspect-ratio: 1; }
+.orbital-home .scene-sun { top: 22%; right: 8%; width: 23px; height: 23px; box-shadow: 0 0 15px #fff0bd, 0 0 60px 20px #ffb13e38, 0 0 170px 30px #f8b86612; }
+.cockpit-window { position: absolute; inset: 10px; border: 1px solid #5d8d9b2c; border-radius: 30px; pointer-events: none; box-shadow: inset 0 0 90px #000b; z-index: 4; }
+.cockpit-window i { position: absolute; width: 24vw; height: 38px; bottom: -10px; background: linear-gradient(#17232e, #02060b 50%); border-top: 1px solid #526d7855; }.cockpit-window i:first-child { left: 0; transform: skewX(35deg); }.cockpit-window i:nth-child(2) { right: 0; transform: skewX(-35deg); }.cockpit-window > span { position: absolute; right: 50%; top: 10px; font: 7px var(--mono); letter-spacing: 2px; color: #68818e; }
+.orbital-attitude { position: absolute; z-index: 5; top: 48%; right: 4%; display: grid; justify-items: center; gap: 16px; pointer-events: none; color: #7fadb56e; font: 8px var(--mono); letter-spacing: 1px; }.orbital-attitude i { height: 70px; width: 18px; border-right: 1px solid #7fadb550; background: repeating-linear-gradient(0deg, transparent 0 13px, #7fadb53a 13px 14px); }
+.home-simulation-links { position: fixed; top: 76px; right: 24px; z-index: 12; display: flex; gap: 8px; }.home-simulation-links a { display: flex; gap: 8px; align-items: center; padding: 9px 12px; border: 1px solid #45687860; background: #07121cc7; backdrop-filter: blur(10px); font-size: 11px; border-radius: 5px; }.home-simulation-links small { font: 7px var(--mono); color: #c6ac76; }
+.immersive-scene-label { display: none; position: fixed; left: 24px; bottom: 22px; z-index: 15; color: #8094a5; font: 9px var(--mono); pointer-events: none; }
+.cockpit-hud-hidden .topbar, .cockpit-hud-hidden .workspace-context-strip, .cockpit-hud-hidden .home-intro, .cockpit-hud-hidden .home-console, .cockpit-hud-hidden .moon3d-mode-bar, .cockpit-hud-hidden .home-grid-toggle, .cockpit-hud-hidden .home-layer-note, .cockpit-hud-hidden .home-epoch, .cockpit-hud-hidden .scene-caption, .cockpit-hud-hidden .moon3d-stage-hud, .cockpit-hud-hidden .moon3d-markers-layer, .cockpit-hud-hidden .screening-grid, .cockpit-hud-hidden .home-simulation-links, .cockpit-hud-hidden .orbital-attitude { display: none; }
+.cockpit-hud-hidden .immersive-scene-label { display: block; }
+.orbital-home .home-renderer-status { display: none; }
+.orbital-home .demo-risk-controls { position: fixed; z-index: 12; bottom: 192px; left: 245px; margin: 0; }
+.orbital-home .demo-risk-controls > span { display: none; }
+.orbital-home .demo-risk-notice { position: fixed; z-index: 14; right: 24px; bottom: 115px; width: 270px; max-height: 210px; overflow: auto; padding: 12px; background: #191c20ed; backdrop-filter: blur(12px); }
+.orbital-home .demo-risk-notice p, .orbital-home .demo-risk-notice li { font-size: 10px; }
+.cockpit-hud-hidden .demo-risk-controls, .cockpit-hud-hidden .demo-risk-notice { display: none; }
+.cockpit-hud-hidden .orbital-home .moon3d-stage { padding-left: 0; }
+#adaptive-simulation.adaptive-page { margin-left: 214px; width: calc(100% - 214px); max-width: none; padding: 30px; }
+.adaptive-title a { padding: 10px 14px; border: 1px solid #385768; border-radius: 6px; color: #99d5dd; font-size: 12px; }
+.adaptive-viewport { box-shadow: inset 0 0 60px #0008, 0 20px 65px #0005; }.adaptive-console { background: #091a26e8; }.adaptive-dialog .adaptive-controls { margin-top: 15px; }
+@media(max-width:1100px) { .home-simulation-links small { display: none; }.orbital-home .home-intro { max-width: 165px; }.orbital-home .home-intro h2 { font-size: 35px; }.orbital-home .home-console { width: 270px; }.orbital-home .home-layer-note { font-size: 9px; } }
+@media(max-width:980px) {
+  .orbital-home .demo-risk-controls { left: 18px; bottom: 230px; }
+  .cockpit-home .topbar { position: fixed; bottom: auto; height: auto; width: 100%; background: #050e18bd; border-right: 0; }.cockpit-home .nav-inner { height: auto; gap: 4px; padding: 8px 14px; }.cockpit-home .workspace-badge { display: none; }.cockpit-home .nav-inner nav { flex: 0 0 100%; gap: 4px; }.cockpit-home .nav-inner nav a { flex-shrink: 0; font-size: 10px; min-height: 35px; }.cockpit-home .brand { font-size: 17px; }
+  .cockpit-home .workspace-context-strip { left: 18px; top: 111px; right: 18px; max-width: none; font-size: 10px; }.orbital-home .home-intro { left: 20px; top: 190px; }.orbital-home .home-intro h2 { font-size: 32px; }
+  .orbital-home .moon3d-stage { padding: 0; }.orbital-home .moon3d-canvas-container { width: min(90svh, 100vw); }.orbital-home .moon3d-stage-hud { inset: 155px 18px 190px; }
+  .orbital-home .home-grid-toggle, .orbital-home .moon3d-mode-bar, .orbital-home .home-layer-note, .orbital-home .home-epoch, .orbital-home .scene-caption { left: 18px; }.orbital-home .moon3d-mode-bar { max-width: calc(100vw - 36px); }.orbital-home .home-layer-note { max-width: calc(100vw - 40px); bottom: 66px; }.orbital-home .home-epoch { right: 18px; }
+  .home-simulation-links { top: auto; right: 18px; bottom: 190px; }.hud-visibility-toggle { top: 8px; right: 14px; font-size: 10px; min-height: 32px; padding: 8px; }
+  .orbital-home .scene-earth { left: 17%; top: 27%; }.orbital-home .scene-sun { top: 29%; }.orbital-home .home-console { top: 190px; bottom: 230px; max-height: none; }
+  #adaptive-simulation.adaptive-page { margin: 0; width: 100%; padding: 22px 16px; }
+}
+@media(max-width:600px) {
+  .orbital-home .demo-risk-controls { bottom: 237px; }.orbital-home .demo-risk-controls button { min-height: 28px; font-size: 9px; }.orbital-home .demo-risk-notice { bottom: 275px; right: 12px; width: min(270px, 90vw); }
+  .orbital-home .home-intro { top: 160px; max-width: 160px; }.orbital-home .home-intro > div { display: none; }.orbital-home .console-toggle { margin: 0; font-size: 10px; padding: 9px; min-height: 36px; }.orbital-home .home-console { left: 12px; right: 12px; top: 205px; bottom: 230px; width: auto; padding: 16px; }
+  .orbital-home .moon3d-canvas-container { width: 108vw; max-width: none; }.orbital-home .moon3d-stage { transform: translateY(8px); }.orbital-home .moon3d-stage-hud { inset: 158px 12px 230px; }.orbital-home .moon3d-hud-btn { padding: 7px; font-size: 8px; }
+  .orbital-home .home-grid-toggle { bottom: 200px; font-size: 9px; }.orbital-home .moon3d-mode-bar { bottom: 106px; padding: 6px; }.orbital-home .moon3d-mode-pills { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }.orbital-home .moon3d-mode-button { font-size: 9px; padding: 6px; min-height: 32px; }
+  .orbital-home .home-layer-note { display: none; }.orbital-home .home-epoch { bottom: 25px; padding: 8px; gap: 8px; }.orbital-home .home-epoch > svg { display: none; }.orbital-home .home-epoch label { display: none; }.orbital-home .home-epoch input { width: 130px; flex: 1; }.orbital-home .home-epoch a { font-size: 10px; }
+  .home-simulation-links { bottom: 200px; gap: 5px; }.home-simulation-links a { padding: 7px; font-size: 9px; }.home-simulation-links a svg { display: none; }.orbital-home .scene-caption { display: none; }.orbital-attitude { display: none; }
+  .orbital-home .scene-earth { width: 43px; left: 10%; top: 27%; }.orbital-home .scene-sun { right: 9%; top: 28%; width: 15px; height: 15px; }.cockpit-window { inset: 5px; border-radius: 15px; }.immersive-scene-label { max-width: 75%; font-size: 8px; }
+}
+
+/* Home-only decorative background. All positions and sizes are art direction. */
+.orbital-home .orbital-backdrop { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; background: #02050c; }
+.orbital-starfield { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .95; }
+.orbital-backdrop .scene-earth { overflow: hidden; }
+.earth-photo { position: absolute; width: 128.4%; max-width: none; height: 128.4%; left: -14.2%; top: -14.2%; object-fit: cover; }
+.earth-light { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 24% 22%, #f5f9ff21, transparent 38%), radial-gradient(circle at 30% 27%, transparent 44%, #01061160 78%, #01040bdb 100%); box-shadow: inset 1px 1px 3px #b5e4ff66; }
+.space-art-credit { position: fixed; z-index: 15; right: 24px; bottom: 6px; font-size: 8px; color: #6f8798; }
+.orbital-home .orbital-backdrop .scene-earth { position: absolute; z-index: 1; top: 31%; right: 1.4%; left: auto; width: clamp(125px, 14vw, 210px); height: auto; aspect-ratio: 1; border-radius: 50%; background: none; box-shadow: none; filter: drop-shadow(-3px -2px 3px #91d4ff65) drop-shadow(0 0 16px #2d7ac42b); }
+.orbital-home .orbital-backdrop .scene-sun { z-index: 1; top: 9%; left: 26%; right: auto; width: 21px; height: 21px; background: radial-gradient(circle at 45% 45%, #fffef2, #fff5d3 50%, #fbd494); box-shadow: 0 0 12px 3px #fff0b9a8, 0 0 50px 14px #f9bd4c30, 0 0 180px 35px #e7a34712; }
+.orbital-backdrop .scene-sun::before { content: ''; position: absolute; inset: -26px; background: linear-gradient(90deg, transparent 47%, #fce6b56b 50%, transparent 53%), linear-gradient(0deg, transparent 48%, #fff1ce6b 50%, transparent 52%); opacity: .6; }
+.orbital-backdrop .scene-sun span { position: absolute; width: 170px; height: 1px; left: -74px; top: 10px; background: linear-gradient(90deg, transparent, #fff0c34a, transparent); }
+.solar-scatter { position: absolute; z-index: 2; inset: 0; background: radial-gradient(ellipse at 27% 10%, #ffe3a00b, transparent 32%); pointer-events: none; }
+.cockpit-window { box-shadow: inset 0 0 90px #000b, inset 2px 3px 2px #f2e1b210; }
+@media(max-width:980px) { .orbital-home .orbital-backdrop .scene-earth { top: 27%; right: 2%; width: 140px; }.orbital-home .orbital-backdrop .scene-sun { left: 25%; top: 23%; } }
+@media(max-width:600px) { .orbital-home .orbital-backdrop .scene-earth { top: 25%; left: 5%; right: auto; width: 93px; }.orbital-home .orbital-backdrop .scene-sun { top: 27%; left: auto; right: 10%; width: 15px; height: 15px; }.orbital-starfield { opacity: .9; } }

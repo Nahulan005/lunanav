@@ -101,4 +101,3 @@ Polar craters are illuminated from extreme grazing angles. In `LandingVisualizat
 Currently, the terrain is rendered with high-fidelity illustrative CSS formations. The production roadmap includes:
 - Connecting to NASA Lunar Reconnaissance Orbiter (LRO) **Lunar Orbiter Laser Altimeter (LOLA)** elevation geotiffs.
 - Translating LOLA digital elevation models (DEM) into precise local slope, surface roughness, and hazard avoidance maps for Shackleton Rim.
-

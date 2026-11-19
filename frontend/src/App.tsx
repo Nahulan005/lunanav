@@ -11,6 +11,9 @@ import { SunEarthGeometryPanel, type GeometryPanelState } from './components/Sun
 import { Moon3DView } from './features/moon3d/Moon3DView'
 import { workspaceTabs, workspaceTabForHash } from './components/workspaceNavigation'
 import { AnalysisDerivation } from './components/AnalysisDerivation'
+import { MissionHome } from './components/MissionHome'
+import './cosmic.css'
+import './orbital.css'
 import { ScheduleManager } from './components/ScheduleManager'
 import LandingVisualization from './features/landing/LandingVisualization'
 import { AdaptiveSimulation } from './features/adaptive/AdaptiveSimulation'
@@ -161,7 +164,7 @@ function App() {
       backendConnected={backendConnected}
       isOutOfCoverage={isOutOfCoverage}
     />
-    {!showMoon3D && !showLandingDemo && !showAdaptive && <main id="planner" className="planning-workspace">
+    {!showMoon3D && !showLandingDemo && !showAdaptive && <main id="planner" className={`planning-workspace ${activeTab === 'overview' ? 'home-workspace' : ''}`}>
       <div className="page-heading">
         <div>
           <div className="eyebrow"><span />SELENOGRAPHIC OPERATIONS / PLANNING WORKSPACE</div>
@@ -184,18 +187,15 @@ function App() {
       </div>
       <div id="workspace-content" tabIndex={-1} className="workspace-content" aria-label={workspaceTabs.find((tab) => tab.id === activeTab)?.label}>
       {activeTab === 'overview' && <section className="workspace-view" data-workspace-page="overview" aria-label="Overview">
-        <div className="workspace-section-label"><span>OVERVIEW</span><p>Current target and data availability</p></div>
-        <section className="panel overview-summary">
-          <div className="overview-target"><div className="eyebrow">SELECTED TARGET</div><h2>{selected.name}</h2><p>{selected.region} · {request.landingDate || 'Date unavailable'} UTC date</p></div>
-          <div className="overview-actions"><a href="#/map">Edit location</a><a href="#/schedule">Change date</a></div>
-          <dl className="availability-list">
-            <div><dt>LOLA point elevation</dt><dd className={terrainSample ? 'data-available' : 'data-unavailable'}>{terrainSample ? `${terrainSample.elevation_value} ${terrainSample.units} · local-derived` : terrainLoading ? 'Requesting sample' : isOutOfCoverage ? 'Unavailable · outside local coverage' : 'Unavailable · no matching provider response'}</dd></div>
-            <div><dt>Sun / Earth directions</dt><dd className={geometryAvailable ? 'data-available' : 'data-unavailable'}>{geometryAvailable ? 'Available · model-derived' : currentGeometry?.loading ? 'Requesting geometry' : 'Unavailable · open Site Analysis to check'}{geometryAvailable && <small>{currentGeometry?.response?.observation?.timestamp_utc}</small>}</dd></div>
-            <div><dt>Mission schedule windows</dt><dd className="data-unavailable">Unavailable · no calculated schedule</dd></div>
-            <div><dt>Site04 observation coverage</dt><dd className="data-unavailable">Separate X/Y grid in 3D Landing · open to check API status</dd></div>
-          </dl>
-          <p className="tab-context-note">Inspect <a href="#/analysis">provider results</a> or <a href="#/coverage">sources and coverage</a>. Fixed demo comparisons are separate from these data sources.</p>
-        </section>
+        <MissionHome request={request} selected={selected} connected={backendConnected}
+          terrain={terrainSample ? `${terrainSample.elevation_value} ${terrainSample.units} · local-derived` : terrainLoading ? 'Requesting sample' : isOutOfCoverage ? 'Unavailable · outside local coverage' : 'Unavailable · no matching response'}
+          geometry={geometryAvailable ? 'Available · model-derived' : currentGeometry?.loading ? 'Requesting geometry' : 'Unavailable · inspect provider results'}
+          onDate={landingDate => setRequest(current => ({ ...current, landingDate }))}
+          onSelect={(point, id) => {
+            const site = landingSites.find(item => item.id === id)
+            if (site) selectSite(site)
+            else { setRequest(current => ({ ...current, siteId: 'custom', latitude: point.latitude, longitude: point.longitude })); setTerrainResult(null) }
+          }} />
       </section>}
       {activeTab === 'map' && <section className="workspace-view" data-workspace-page="map" aria-label="Lunar Map">
         <div className="workspace-section-label"><span>LUNAR MAP</span><p>Illustrative schematic · select a preset or enter coordinates</p></div>

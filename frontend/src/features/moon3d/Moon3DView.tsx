@@ -87,7 +87,7 @@ function projectPoint(
   return { x: x2, y: y2, z: z2, screenX, screenY, visible, scale, opacity }
 }
 
-export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03-15' }: { initialSelectedId?: string; initialLocation?: SurfaceLocation; date?: string }) {
+export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03-15', compact = false, onLocationSelect }: { initialSelectedId?: string; initialLocation?: SurfaceLocation; date?: string; compact?: boolean; onLocationSelect?: (location: SurfaceLocation, presetId?: string) => void }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [webglReady, setWebglReady] = useState(false)
   const [webglUnavailable, setWebglUnavailable] = useState(false)
@@ -109,7 +109,12 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
     return { kind: 'point', latitude: point?.latitude ?? 0, longitude: point?.longitude ?? 0 }
   })
   const surface: SurfaceLocation = selection.kind === 'preset' ? selection.site : selection
-  const setSurface = (point: SurfaceLocation) => setSelection({ kind: 'point', ...point })
+  const setSurface = (point: SurfaceLocation) => { setSelection({ kind: 'point', ...point }); onLocationSelect?.(point) }
+  useEffect(() => {
+    if (!compact) return
+    const site = MOON3D_LANDING_SITES.find(item => item.id === initialSelectedId)
+    if (site) setSelection({ kind: 'preset', site })
+  }, [initialSelectedId, compact])
   const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>('none')
   const [dimensions, setDimensions] = useState<{ width: number; height: number }>({
     width: 440,
@@ -166,14 +171,14 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect
-        const side = Math.min(width || 440, height || 440, 520)
+        const side = Math.min(width || 440, height || 440, compact ? 1400 : 520)
         setDimensions({ width: side, height: side })
       }
     })
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [compact])
 
   // Auto-rotation animation loop
   useEffect(() => {
@@ -497,6 +502,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
       return // Ignore accidental click triggered during rotation drag
     }
     setSelection({ kind: 'preset', site })
+    onLocationSelect?.(site, site.id)
     setAutoRotate(false)
   }
 
@@ -578,8 +584,9 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
   const headingId = useId()
 
   return (
-    <section className="moon3d-panel" aria-labelledby={headingId}>
+    <section className={`moon3d-panel ${compact ? 'moon3d-compact' : ''}`} aria-label={compact ? 'Interactive lunar scene' : undefined} aria-labelledby={compact ? undefined : headingId}>
       {/* Component Header */}
+      {!compact && <>
       <div className="moon3d-header">
         <div className="moon3d-title-group">
           <div className="moon3d-eyebrow">
@@ -608,7 +615,9 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
         </div>
       </div>
 
+      </>}
       {/* Heatmap Mode Selector Bar */}
+      {!compact && <>
       <div className="screening-legend">
         <strong>Real coverage and model-derived point context · Overall risk not evaluated</strong>
         <p>Real risk stays Unknown because required inputs are unavailable. Toggle Demo Risk Overlay for decorative preset patches; their colours and sizes are artwork fixtures, not calculated results.</p>
@@ -622,6 +631,8 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
           <label>Selected east longitude (°)<input type="number" min="-180" max="180" step="any" value={surface.longitude} onChange={(e) => { const n = e.target.valueAsNumber; if (Number.isFinite(n) && Math.abs(n) <= 180) { setSurface({ ...surface, longitude: n }); setAutoRotate(false) } }} /></label>
         </div>
       </div>
+      </>}
+      {compact && <label className="home-grid-toggle"><input type="checkbox" checked={showCoordinateGrid} onChange={event => setShowCoordinateGrid(event.target.checked)} /> Coordinate grid</label>}
       <div className="moon3d-mode-bar" role="toolbar" aria-label="Heatmap overlay modes">
         <span className="moon3d-mode-label">
           <Layers size={13} />
@@ -680,7 +691,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
         <p>{selectedSite ? `${selectedSite.name}: ${demoBandForSite(selectedSite.id)?.label ?? 'No demo category'}. Preset identity only; no risk calculation.` : 'Arbitrary selected point: real risk Unknown; patch colour does not assign this point a result.'}</p>
       </section>}
 
-      <p className="moon3d-renderer-status" role="status">{webglReady ? '3D renderer: WebGL / React Three Fiber' : webglUnavailable ? 'WebGL unavailable: using the existing 2D fallback' : 'Preparing 3D renderer; 2D fallback active'} · Surface texture and lighting are decorative, not measured terrain or Horizons sunlight.</p>
+      <p className={`moon3d-renderer-status ${compact ? 'home-renderer-status' : ''}`} role="status">{webglReady ? '3D renderer: WebGL / React Three Fiber' : webglUnavailable ? 'WebGL unavailable: using the existing 2D fallback' : 'Preparing 3D renderer; 2D fallback active'} · Surface texture and lighting are decorative, not measured terrain or Horizons sunlight.</p>
       {/* Main Content Grid: Viewport Stage + Inspector Sidebar */}
       <div className="moon3d-grid">
         {/* 3D Viewport Stage */}
@@ -803,7 +814,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
         </div>
 
         {/* Sidebar: Selected Site Inspector + Heatmap Legend */}
-        <div className="moon3d-sidebar">
+        {!compact && <div className="moon3d-sidebar">
           {screening && <OverallRiskStatus location={surface} date={date} coverage={site04Coverage} loading={coverageLoading} />}
           {!screening && <><div className="moon3d-inspector" aria-live="polite">
   <h3>{activeHeatmap.label}</h3>
@@ -873,9 +884,10 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
               </div>
             </div>
           </div>
-        </div>
+        </div>}
       </div>
 
+      {!compact && <>
       <Site04CoverageGrid data={site04Coverage} loading={coverageLoading} error={coverageError} onRetry={() => { setSite04Coverage(null); setCoverageError(null); setCoverageLoading(true); setCoverageAttempt(n => n + 1) }} />
       {/* Global Module Disclaimer */}
       <h3>Selected-coordinate provider context · separate from demo fixtures</h3>
@@ -887,6 +899,8 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
           {MOON3D_DISCLAIMER}
         </div>
       </div>
+      </>}
+      {compact && <p className="home-layer-note" role="status">{activeHeatmap.description} {activeHeatmap.disclaimer}</p>}
     </section>
   )
 }

@@ -692,4 +692,3 @@ export const LandingVisualization: React.FC = () => {
 };
 
 export default LandingVisualization;
-

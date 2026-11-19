@@ -75,4 +75,3 @@ export const landingMockData = {
 };
 
 export type LandingMockData = typeof landingMockData;
-
