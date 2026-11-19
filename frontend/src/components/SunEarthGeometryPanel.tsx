@@ -9,12 +9,14 @@ export interface GeometryPanelState {
   loading: boolean
 }
 
-export function SunEarthGeometryPanel({ request, onStateChange }: {
+export function SunEarthGeometryPanel({ request, onStateChange, initialState }: {
   request: AnalysisRequest
   onStateChange?: (state: GeometryPanelState) => void
+  initialState?: GeometryPanelState | null
 }) {
-  const [response, setResponse] = useState<SunEarthGeometryResponse | null>(null)
-  const [loading, setLoading] = useState(geometryConfigured)
+  const [cached] = useState(() => initialState?.requestKey === JSON.stringify(request) && !initialState.loading ? initialState : null)
+  const [response, setResponse] = useState<SunEarthGeometryResponse | null>(cached?.response ?? null)
+  const [loading, setLoading] = useState(!cached && geometryConfigured)
   const [error, setError] = useState('')
   const { latitude, longitude, landingDate, siteId } = request
   const requestKey = JSON.stringify(request)
@@ -24,6 +26,7 @@ export function SunEarthGeometryPanel({ request, onStateChange }: {
   }, [onStateChange, requestKey, response, loading])
 
   useEffect(() => {
+    if (cached) return
     if (!geometryConfigured) return
     if (!Number.isFinite(latitude) || Math.abs(latitude) > 90 || !Number.isFinite(longitude)
       || Math.abs(longitude) > 180 || !/^\d{4}-\d{2}-\d{2}$/.test(landingDate)) {
@@ -55,12 +58,12 @@ export function SunEarthGeometryPanel({ request, onStateChange }: {
 
   const available = response?.status === 'available' && response.live_request_executed && response.observation !== null
   const sample = available ? response.observation : null
-  const angle = (value: number | undefined) => value === undefined ? '—' : `${value.toFixed(2)}°`
+  const angle = (value: number | undefined) => value === undefined ? 'Unavailable' : `${value.toFixed(2)}°`
   return <section className="panel geometry-panel" aria-label="Sun and Earth geometry" aria-busy={loading}>
     <div className="geometry-heading">
       <h2><Sun size={17} />Sun &amp; Earth Geometry</h2>
       <span className={`small-badge ${sample ? '' : 'warning'}`} role="status">
-        {loading ? <><LoaderCircle size={12} className="spin" /> Requesting geometry</> : sample ? 'Model-derived · Horizons response' : 'Demo/fallback data'}
+        {loading ? <><LoaderCircle size={12} className="spin" /> Requesting geometry</> : sample ? 'Model-derived · Horizons response' : 'Unavailable'}
       </span>
     </div>
     <p className="geometry-provider">Provider status: {loading ? 'loading' : response?.status ?? 'unavailable'}

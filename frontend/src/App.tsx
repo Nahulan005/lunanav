@@ -6,27 +6,37 @@ import { MetricCard } from './components/MetricCard'
 import { LunarMap } from './components/LunarMap'
 import { MissionTimeline } from './components/MissionTimeline'
 import { MissionHeader } from './components/MissionHeader'
-import { SelectedSitePanel } from './components/SelectedSitePanel'
 import { ScenarioComparison } from './components/ScenarioComparison'
 import { TerrainProvenancePanel } from './components/TerrainProvenancePanel'
 import { SunEarthGeometryPanel, type GeometryPanelState } from './components/SunEarthGeometryPanel'
-import { MissionDecision } from './components/MissionDecision'
 import { Moon3DView } from './features/moon3d/Moon3DView'
+import { workspaceTabs, workspaceTabForHash } from './components/workspaceNavigation'
+import { AnalysisDerivation } from './components/AnalysisDerivation'
+import LandingVisualization from './features/landing/LandingVisualization'
+import { AdaptiveSimulation } from './features/adaptive/AdaptiveSimulation'
+import { MissionHome } from './components/MissionHome'
+import { GeometrySamples } from './components/GeometrySamples'
+import './cosmic.css'
+import './orbital.css'
 
 function App() {
   const [workspaceHash, setWorkspaceHash] = useState(window.location.hash)
-  const showMoon3D = workspaceHash === '#landing-3d'
+  const showMoon3D = workspaceHash === '#/landing-3d' || workspaceHash === '#landing-3d'
+  const showAdaptive = workspaceHash === '#/adaptive-simulation'
+  const showLandingDemo = workspaceHash === '#/landing-demo'
+  const activeTab = workspaceTabForHash(workspaceHash)
   useEffect(() => {
     const navigate = () => setWorkspaceHash(window.location.hash)
     window.addEventListener('hashchange', navigate)
     return () => window.removeEventListener('hashchange', navigate)
   }, [])
   useEffect(() => {
-    const targets = ['#planner', '#site-analysis', '#scenarios', '#timeline', '#landing-3d']
-    if (!targets.includes(workspaceHash)) return
-    const frame = requestAnimationFrame(() => document.getElementById(workspaceHash.slice(1))?.scrollIntoView())
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(showAdaptive ? 'adaptive-simulation' : showLandingDemo ? 'landing-demo' : showMoon3D ? 'landing-3d' : 'workspace-content')?.focus({ preventScroll: true })
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    })
     return () => cancelAnimationFrame(frame)
-  }, [workspaceHash])
+  }, [workspaceHash, showMoon3D, showLandingDemo, showAdaptive])
   const [request, setRequest] = useState<AnalysisRequest>(initialRequest)
   const [analyzedRequest, setAnalyzedRequest] = useState(initialRequest)
   const [analysis, setAnalysis] = useState(demoAnalyses.shackleton)
@@ -43,11 +53,14 @@ function App() {
   const dirty = JSON.stringify(request) !== JSON.stringify(analyzedRequest)
   const isOutOfCoverage = !isWithinLolaCoverage(request.latitude, request.longitude)
 
-  const statusLabel = isOutOfCoverage
-    ? 'Demo fallback — outside local LOLA coverage'
-    : backendConnected
-      ? 'Backend connected'
-      : 'Demo data'
+  const terrainSample = !terrainLoading && terrainResult && !terrainResult.isFallback && !terrainResult.isOutOfCoverage
+    && terrainResult.sample.mode === 'local-derived'
+    && terrainResult.sample.coordinate_requested.latitude === request.latitude
+    && terrainResult.sample.coordinate_requested.longitude === request.longitude
+    && Number.isFinite(terrainResult.sample.elevation_value) ? terrainResult.sample : null
+  const currentGeometry = geometryState?.requestKey === JSON.stringify(request) ? geometryState : null
+  const geometryAvailable = currentGeometry?.response?.status === 'available' && currentGeometry.response.live_request_executed && currentGeometry.response.observation !== null
+  const statusLabel = backendConnected ? 'Backend connected' : 'Backend unavailable / demo analysis'
 
   useEffect(() => {
     let active = true
@@ -129,12 +142,12 @@ function App() {
       backendConnected={backendConnected}
       isOutOfCoverage={isOutOfCoverage}
     />
-    <main id="planner" hidden={showMoon3D}>
+    {!showMoon3D && !showLandingDemo && !showAdaptive && <main id="planner" className={`planning-workspace ${activeTab === 'overview' ? 'home-workspace' : ''}`}>
       <div className="page-heading">
         <div>
           <div className="eyebrow"><span />SELENOGRAPHIC OPERATIONS / PLANNING WORKSPACE</div>
-          <h1>Lunar Landing Site Intelligence</h1>
-          <p>Evaluate the terrain. Find the window. Explore your next lunar mission.</p>
+          <h1>{workspaceTabs.find((tab) => tab.id === activeTab)?.label}</h1>
+          <p>Lunar Landing Site Intelligence · mission-planning workspace</p>
         </div>
         <div className="mission-label">
           <Moon size={19} />
@@ -142,19 +155,33 @@ function App() {
         </div>
       </div>
 
-      <div className="demo-banner">
-        <FlaskConical size={17} />
-        <p><strong>ILLUSTRATIVE DEMO</strong> All values are demo estimates, not scientifically accurate predictions.</p>
-        <span className="status-label">{statusLabel}</span>
+      <div className="workspace-context-strip">
+        <span><MapPin size={14} /><strong>{selected.name}</strong></span>
+        <span>{Number.isFinite(request.latitude) ? `${request.latitude.toFixed(2)}°` : 'Unknown'} / {Number.isFinite(request.longitude) ? `${request.longitude.toFixed(2)}°` : 'Unknown'}</span>
+        <span><Clock3 size={14} />{request.landingDate || 'Date not set'} UTC</span>
+        <span role="status">{loading ? 'Analyzing…' : dirty ? 'Configuration changed' : 'Configuration ready'}</span>
       </div>
-
-      <div className="workspace-grid">
-        <section className="panel setup-panel" id="site-analysis">
+      <div id="workspace-content" tabIndex={-1} className="workspace-content" aria-label={workspaceTabs.find((tab) => tab.id === activeTab)?.label}>
+      {activeTab === 'overview' && <section className="workspace-view" data-workspace-page="overview" aria-label="Overview">
+        <MissionHome request={request} selected={selected} connected={backendConnected}
+          terrain={terrainSample ? `${terrainSample.elevation_value} ${terrainSample.units} · local-derived` : terrainLoading ? 'Requesting sample' : isOutOfCoverage ? 'Unavailable · outside local coverage' : 'Unavailable · no matching response'}
+          geometry={geometryAvailable ? 'Available · model-derived' : currentGeometry?.loading ? 'Requesting geometry' : 'Unavailable · inspect provider results'}
+          onDate={landingDate => setRequest(current => ({ ...current, landingDate }))}
+          onSelect={(point, id) => {
+            const site = landingSites.find(item => item.id === id)
+            if (site) selectSite(site)
+            else { setRequest(current => ({ ...current, siteId: 'custom', latitude: point.latitude, longitude: point.longitude })); setTerrainResult(null) }
+          }} />
+      </section>}
+      {activeTab === 'map' && <section className="workspace-view" data-workspace-page="map" aria-label="Lunar Map">
+        <div className="workspace-section-label"><span>LUNAR MAP</span><p>Illustrative schematic · select a preset or enter coordinates</p></div>
+        <div className="workspace-grid map-workspace">
+        <section className="panel setup-panel" id="location-controls">
           <div className="section-heading">
             <h2><Compass size={18} />Landing site selection</h2>
             <span className="step-label">01 / CONFIGURE</span>
           </div>
-          <form onSubmit={handleAnalyze}>
+          <form id="mission-configuration" onSubmit={handleAnalyze}>
             <fieldset disabled={loading}>
               <label htmlFor="site">Landing site</label>
               <div className="select-wrap">
@@ -174,8 +201,7 @@ function App() {
                   <input id="longitude" type="number" min="-180" max="180" step="any" required value={Number.isNaN(request.longitude) ? '' : request.longitude} onChange={(e) => setRequest({ ...request, siteId: 'custom', longitude: e.target.valueAsNumber })} />
                 </div>
               </div>
-              <label htmlFor="landing-date">Landing date <span>UTC</span></label>
-              <input id="landing-date" type="date" required value={request.landingDate} onChange={(e) => setRequest({ ...request, landingDate: e.target.value })} />
+              <a className="schedule-shortcut" href="#/schedule">Landing date: {request.landingDate} UTC · Edit schedule</a>
               <div className="duration-note"><Clock3 size={14} />Analysis window<span>7 Earth days</span></div>
               <button className="analyze-button" type="submit">
                 {loading ? <LoaderCircle className="spin" size={17} /> : <Rocket size={17} />}
@@ -187,15 +213,46 @@ function App() {
           </form>
         </section>
 
-        <LunarMap request={request} selected={selected} onSelect={selectSite} disabled={loading} />
-        <SelectedSitePanel site={selected} request={request} loading={loading} dirty={dirty} />
-      </div>
-
-      {terrainResult?.sample && !terrainResult.isFallback ? (
+          <LunarMap request={request} selected={selected} onSelect={selectSite} disabled={loading} />
+        </div>
+      </section>}
+      {activeTab === 'analysis' && <section className="workspace-view" data-workspace-page="analysis" aria-label="Site Analysis">
+        <div className="workspace-section-label"><span>SITE ANALYSIS</span><p>Selected-location provider results → separate sources and limitations</p></div>
+        <AnalysisDerivation request={request} siteName={selected.name} terrain={terrainSample}
+          terrainLoading={terrainLoading} outsideCoverage={isOutOfCoverage} geometry={currentGeometry} />
+        <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={setGeometryState} initialState={geometryState} />
+        <p className="tab-context-note">Terrain source, coverage, and checksum details are in <a href="#/coverage">Data &amp; Coverage</a>. Geometry is point-in-time context, not a schedule.</p>
+        <section className="panel terrain-result" aria-label="Selected-location terrain result">
+          <div className="section-heading"><h2><Mountain size={17} />LOLA point elevation</h2><span className="small-badge">{terrainSample ? 'LOCAL-DERIVED' : 'UNAVAILABLE'}</span></div>
+          {terrainSample ? <>
+            <p className="terrain-elevation">{terrainSample.elevation_value} <small>{terrainSample.units}</small></p>
+            <dl className="provider-facts"><div><dt>Source / product</dt><dd>{terrainSample.source_name} · {terrainSample.product_name} {terrainSample.product_version}</dd></div><div><dt>Sampled coordinates</dt><dd>{terrainSample.coordinate_used.latitude}° / {terrainSample.coordinate_used.longitude}°</dd></div><div><dt>Elevation reference</dt><dd>{terrainSample.reference_radius_m} m reference radius</dd></div><div><dt>Acquisition timestamp</dt><dd>Unavailable · not supplied by this endpoint</dd></div></dl>
+            <p className="tab-context-note">Containing-cell elevation only. No interpolation or site-scale slope/horizon analysis; not scientifically validated for operations.</p>
+          </> : <p className="unavailable-message">{terrainLoading ? 'Requesting a terrain sample.' : isOutOfCoverage ? 'Selected coordinates are outside local LOLA coverage.' : 'No matching local-derived terrain response is available.'} No substitute demo elevation is shown.</p>}
+        </section>
+      </section>}
+      {activeTab === 'schedule' && <section className="workspace-view" data-workspace-page="schedule" aria-label="Mission Schedule">
+        <div className="workspace-section-label"><span>MISSION SCHEDULE</span><p>Configure the epoch. Inspect returned geometry.</p></div><div className="schedule-workbench">
+        <form className="panel schedule-controls" onSubmit={handleAnalyze}>
+          <h2><Clock3 size={17} />Configure the planning date</h2>
+              <label htmlFor="landing-date">Landing date <span>UTC</span></label>
+              <input id="landing-date" type="date" disabled={loading} required value={request.landingDate} onChange={(e) => setRequest({ ...request, landingDate: e.target.value })} />
+          <p className="unavailable-message"><strong>Real schedule windows unavailable.</strong> No terrain-aware illumination or geometric visibility windows have been calculated. Point-in-time directions do not establish a schedule.</p>
+          <p>Changing this UTC date updates geometry inputs. Analyze Mission retains the existing demo analysis behavior.</p>
+          <button type="submit" className="analyze-button" disabled={loading}>{loading ? 'Analyzing…' : 'Analyze Mission'}</button>
+        </form>
+        <GeometrySamples key={JSON.stringify(request)} state={currentGeometry} />
+        </div>
+        <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={setGeometryState} initialState={geometryState} />
+        <details className="panel demo-timeline"><summary>Optional demo timeline · fixed illustrative periods</summary><MissionTimeline date={analyzedRequest.landingDate} /></details>
+      </section>}
+      {activeTab === 'coverage' && <section className="workspace-view" data-workspace-page="coverage" aria-label="Data and Coverage">
+        <div className="workspace-section-label"><span>DATA &amp; COVERAGE</span><p>Provenance, coverage boundaries, and unresolved data</p></div>
+      {terrainSample && terrainResult ? (
         <TerrainProvenancePanel
           result={terrainResult}
           loading={terrainLoading}
-          siteName={analyzedSite.name}
+          siteName={selected.name}
         />
       ) : (
         <section className="panel terrain-compact-notice" aria-label="Terrain coverage limitations">
@@ -209,17 +266,30 @@ function App() {
             </div>
             <ul className="terrain-limitations-list">
               <li>Real LOLA terrain available only for the current local coverage region.</li>
-              <li>Coordinates outside coverage use clearly labeled demo fallback data.</li>
+              <li>No provider elevation is shown when coverage or a matching response is unavailable.</li>
               <li>Single-cell elevation; no interpolation or RF link-budget calculation.</li>
             </ul>
           </div>
         </section>
       )}
 
+        <section className="panel coverage-explanation">
+          <h2>Source and interpretation guide</h2>
+          <dl>
+            <div><dt>LOLA terrain</dt><dd>Local point elevation only where a matching backend response is available. Missing coverage remains unavailable; demo fallbacks are not measured terrain.</dd></div>
+            <div><dt>JPL Horizons geometry</dt><dd>Model-derived directions when available. See Site Analysis for source status and limitations; a direction is not terrain-cleared visibility or guaranteed communications.</dd></div>
+            <div><dt>Demo comparisons and timeline</dt><dd>Fixed local fixtures; independent of NASA-derived provider values.</dd></div>
+            <div className="coverage-unavailable"><dt>Site04 observation coverage</dt><dd>Not connected to this dashboard. No verified Site04 cells are displayed here. The separate backend observation-coverage contract and pipeline are unchanged.</dd></div>
+          </dl>
+          <p>No validated spatial suitability grid or recommendation is available.</p>
+        </section>
+      </section>}
+      {activeTab === 'compare' && <section className="workspace-view" data-workspace-page="compare" aria-label="Compare Scenarios">
+        <div className="workspace-section-label"><span>COMPARE SCENARIOS</span><p>Illustrative fixtures only · not a spatial risk map or validated recommendation</p></div>
       <section className="results" aria-busy={loading} aria-label="Demo mission results">
         <div className="results-heading">
           <div>
-            <h2>Mission telemetry <span>/ {analyzedSite.name}</span></h2>
+            <h2>Last analyzed demo fixture <span>/ {analyzedSite.name}</span></h2>
             <p role="status">{dirty && !loading ? 'Configuration changed. Analyze Mission to refresh the results.' : message}</p>
           </div>
           <span className="results-date"><i className="legend-dot" />{analyzedRequest.landingDate} · 7-day window</span>
@@ -232,26 +302,28 @@ function App() {
         </div>
       </section>
 
-      <MissionDecision analysis={analysis} analyzedRequest={analyzedRequest} request={request}
-        siteName={analyzedSite.name} terrain={terrainResult} terrainLoading={terrainLoading} geometry={geometryState} />
-      <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={setGeometryState} />
-      <MissionTimeline date={analyzedRequest.landingDate} />
       <ScenarioComparison selectedId={selectedScenarioId} disabled={loading} onSelect={(site) => { setSelectedScenarioId(site.id); selectSite(site) }} />
+      </section>}
+      </div>
       <footer>
         <span><Orbit size={17} /><strong>LunaNav</strong><span className="footer-divider">/</span>A clearer path to the Moon.</span>
         <span><Globe2 size={13} />{statusLabel}</span>
       </footer>
-    </main>
-    {showMoon3D && <main id="landing-3d">
+    </main>}
+    {showAdaptive && <AdaptiveSimulation siteName={selected.name} date={request.landingDate} />}
+    {showLandingDemo && <main id="landing-demo" tabIndex={-1}>
+      <LandingVisualization />
+    </main>}
+    {showMoon3D && <main id="landing-3d" tabIndex={-1}>
       <div className="page-heading">
         <div><h1>3D Landing</h1><p>Explore an illustrative lunar scene and demo landing-site comparisons.</p></div>
-        <a href="#planner">Return to dashboard</a>
+        <a href="#/overview">Return to dashboard</a>
       </div>
       <div className="demo-banner">
         <FlaskConical size={17} />
         <p><strong>ILLUSTRATIVE DEMO</strong> All 3D values, terrain detail, and heatmaps are demo fixtures, separate from the dashboard's backend results. No validated spatial coverage or landing-safety assessment.</p>
       </div>
-      <Moon3DView initialSelectedId={request.siteId} />
+      <Moon3DView initialSelectedId={request.siteId} date={request.landingDate} />
     </main>}
   </>
 }

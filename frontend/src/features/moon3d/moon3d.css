@@ -1,4 +1,25 @@
 /* Isolated 3D Lunar Visualization Component Styles for LunaNav */
+.screening-grid { position: absolute; inset: 0; pointer-events: none; }
+.screening-legend, .screening-details { padding: 16px; margin: 16px 0; background: #091b2c; border: 1px solid #496075; border-radius: 8px; }
+.screening-legend p, .screening-details p, .screening-details li { font-size: 12px; line-height: 1.7; color: #c1d1df; }
+.screening-symbols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.screening-symbols span { padding: 10px; border: 1px solid currentColor; font-size: 12px; border-radius: 4px; }
+.screen-pass { color: #83e5bc; } .screen-review { color: #ffd082; } .screen-fail { color: #ff9aa9; } .screen-unknown { color: #e1e5eb; background: repeating-linear-gradient(45deg, #283544, #283544 6px, #344253 6px, #344253 8px); }
+.screening-details table { min-width: 680px; width: 100%; font-size: 12px; }
+.screening-details td, .screening-details th { padding: 10px; text-align: left; white-space: normal; }
+.screening-details caption { text-align: left; padding: 10px; color: #caddeb; }
+.screening-details summary { cursor: pointer; padding: 10px 0; color: #97d6ef; }
+.screening-checksum { overflow-wrap: anywhere; }
+.screening-decision-banner { padding: 16px; margin: 12px 0 18px; border: 1px solid #8395a8; border-left: 4px solid #c5d2de; border-radius: 6px; background: #203044; }
+.screening-decision-banner strong { display: block; font-size: 16px; line-height: 1.5; color: #f0f6fc; overflow-wrap: anywhere; }
+.screening-decision-banner span { font-size: 12px; font-weight: 600; color: #d4e0eb; }
+.screening-source-available, .screening-source-missing { display: inline-block; padding: 4px 7px; margin-bottom: 5px; border: 1px solid #54768a; border-radius: 4px; }
+.screening-source-available { color: #a6e9ff; background: #123547; }
+.screening-source-missing { color: #d6dde6; background: #2b3542; }
+.screening-coordinate-controls { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 12px; }
+.screening-coordinate-controls label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; flex: 1; min-width: 170px; }
+.screening-coordinate-controls input { width: 100%; }
+@media (max-width: 640px) { .screening-symbols { grid-template-columns: 1fr; } .screening-details { padding: 10px; } }
 
 .moon3d-panel {
   position: relative;
@@ -702,3 +723,13 @@
     padding: 6px 8px;
   }
 }
+
+/* Large preset hit areas sit above the non-interactive globe overlays. */
+.moon3d-marker-btn { width: 44px; height: 44px; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+.moon3d-marker-btn.layer-none .moon3d-pin-target { background: #c5ced6; border-color: #f1f5f8; box-shadow: 0 0 8px #bbcbd666; }
+.moon3d-marker-btn.layer-sunlight .moon3d-pin-target { background: #ffce68; border-color: #fff0b5; box-shadow: 0 0 14px #ffbb3388; }
+.moon3d-marker-btn.layer-earth-visibility .moon3d-pin-target { background: #48dafa; border-color: #b3f6ff; box-shadow: 0 0 14px #36caff88; }
+.moon3d-marker-btn.layer-feasibility .moon3d-pin-target { background: #9c8fb3; border-color: #e4d4fa; box-shadow: 0 0 10px #b59cd466; }
+.moon3d-node-value { position: absolute; top: 36px; white-space: nowrap; pointer-events: none; background: #061322; color: #f1f5fa; border: 1px solid #68839b; padding: 3px 5px; border-radius: 3px; font-size: 10px; }
+.moon3d-fixture-values { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; font-size: 12px; }
+.moon3d-fixture-values dd { margin: 0; }

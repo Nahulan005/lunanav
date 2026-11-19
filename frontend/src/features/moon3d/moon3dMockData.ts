@@ -62,52 +62,28 @@ export interface MareFeature {
 
 export const HEATMAP_CONFIGS: Record<HeatmapMode, HeatmapConfig> = {
   none: {
-    id: 'none',
-    label: 'Standard Surface',
-    shortCode: 'SURF / 00',
-    description: 'Natural optical simulation of lunar regolith, maria, and crater relief.',
-    disclaimer: 'Illustrative photometric surface shader model.',
-    stops: [
-      { label: 'Highlands Regolith', color: '#b8c0c4', description: 'Anorthositic highland crust with high optical albedo' },
-      { label: 'Maria Basalts', color: '#38464f', description: 'Low-albedo volcanic basalt deposits' },
-      { label: 'Deep Crater Shadow', color: '#09131d', description: 'Unilluminated interior floor and permanent shadows' },
-    ],
+    id: 'none', label: 'Natural Regolith · illustrative', shortCode: 'SURF / DEMO',
+    description: 'Neutral grayscale procedural surface. Brightness depicts decorative surface detail only.',
+    disclaimer: 'No measured reflectance, elevation, or permanent-shadow classification.',
+    stops: [{ label: 'Light gray', color: '#bcbcbc', description: 'Decorative bright terrain' }, { label: 'Dark gray', color: '#303030', description: 'Decorative maria and shading' }],
   },
   sunlight: {
-    id: 'sunlight',
-    label: 'Sunlight Availability',
-    shortCode: 'SOLAR / 01',
-    description: 'Illustrative solar illumination model contrasting equatorial sun angles with polar grazing illumination.',
-    disclaimer: 'Illustrative model. Not derived from real-time solar ephemerides or horizon elevation profiles.',
-    stops: [
-      { label: 'Extended Illumination (>85%)', color: '#f0c16a', description: 'Elevated polar peaks or peak diurnal exposure' },
-      { label: 'Moderate Day/Night (45–84%)', color: '#b8862f', description: 'Standard diurnal cycling across mid-latitudes' },
-      { label: 'Permanent Shadow / Low (<45%)', color: '#273248', description: 'Deep crater depressions with persistent darkness' },
-    ],
+    id: 'sunlight', label: 'Sunlight Availability · decorative demo', shortCode: 'SUN / DEMO',
+    description: 'Demo layer · preset sites only. Amber nodes display existing fixed sunlight percentages; arbitrary surface points have no layer data.',
+    disclaimer: 'No illumination percentages, durations, terrain masking, or ephemeris-derived coverage are represented.',
+    stops: [{ label: 'Amber preset node', color: '#ffd773', description: 'Existing sunlight fixture percentage; not calculated' }, { label: 'Unmarked surface', color: '#514022', description: 'No data for this layer' }],
   },
   'earth-visibility': {
-    id: 'earth-visibility',
-    label: 'Earth Direct Line-of-Sight',
-    shortCode: 'COMM / 02',
-    description: 'Illustrative radio line-of-sight to Earth based on lunar selenographic libration and sub-Earth longitude.',
-    disclaimer: 'Illustrative geometric estimate. Does not calculate atmospheric refraction or RF link margins.',
-    stops: [
-      { label: 'Continuous Nearside (>90%)', color: '#5ac9ed', description: 'Unobstructed line-of-sight toward Earth' },
-      { label: 'Marginal Limb (25–89%)', color: '#2f698e', description: 'Libration-sensitive visibility near lunar limb' },
-      { label: 'Farside Radio Shadow (<25%)', color: '#131e2b', description: 'Geometric occultation by the lunar body' },
-    ],
+    id: 'earth-visibility', label: 'Earth Direct Line-of-Sight · decorative demo', shortCode: 'EARTH / DEMO',
+    description: 'Demo layer · preset sites only. Cyan nodes display existing fixed Earth-visibility percentages; arbitrary surface points have no layer data.',
+    disclaimer: 'Shading does not establish geometric terrain clearance, visibility duration, or RF communications.',
+    stops: [{ label: 'Cyan preset node', color: '#5ac9ed', description: 'Existing Earth-visibility fixture percentage; not calculated' }, { label: 'Unmarked surface', color: '#132b50', description: 'No data for this layer' }],
   },
   feasibility: {
-    id: 'feasibility',
-    label: 'Landing Feasibility Index',
-    shortCode: 'EVAL / 03',
-    description: 'Illustrative composite heuristic weighing slope safety, communication coverage, and sunlight.',
-    disclaimer: 'Demonstration scoring index only. Not an operational safety rating for descent flight software.',
-    stops: [
-      { label: 'Favorable Scenario (≥80)', color: '#70e3b0', description: 'Balanced terrain slope, communication, and lighting' },
-      { label: 'Review Required (60–79)', color: '#f0c16a', description: 'Tradeoff constraint present in lighting or terrain' },
-      { label: 'High Planning Hazard (<60)', color: '#f88795', description: 'Severe communication shadow or steep slope hazard' },
-    ],
+    id: 'feasibility', label: 'Landing Feasibility · unavailable', shortCode: 'SCREEN / UNKNOWN',
+    description: 'Grey cells show unknown screening status. Dashed boundaries are display cells, not validated data coverage.',
+    disclaimer: 'Required spatial grid, mandatory site-scale slope, terrain horizons, and configured thresholds are unavailable. No suitability score or safety assessment is computed.',
+    stops: [{ label: '? GREY / Unknown', color: '#8899aa', description: 'Missing or insufficient required data; cannot classify as favorable' }],
   },
 }
 
@@ -221,7 +197,7 @@ export const MOON3D_LANDING_SITES: readonly Moon3DLandingSite[] = [
     terrainObstructionPct: 17,
     historicalContext: 'High-Albedo Pyroclastic Feature',
     description:
-      'Brightest large feature on the lunar nearside, hosting the sinuous rille Vallis Schröteri and extensive pyroclastic glass deposits.',
+      'Brightest large feature on the lunar nearside, hosting the sinuous rille Vallis SchrÃ¶teri and extensive pyroclastic glass deposits.',
     targetType: 'volcanic-dome',
   },
 ]
