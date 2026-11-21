@@ -1,13 +1,31 @@
 # Site04 regional reader on Render Free
 
-Deployment preparation only. No Render settings were changed and no code was
-committed, pushed or deployed during this work.
+## Recover the existing service
 
-Confirmed from the owner's dashboard: branch `main`, root directory `backend`,
-current build command `pip install -r requirements.txt`. These instructions assume
-that layout; do not put the frontend's npm build command on the Python service.
+The Vercel frontend calls `https://lunara-cqiq.onrender.com`. When debugging a
+deployment mismatch, check that origin directly. A healthy
+`/api/v1/health` only confirms the service responds. A 404 from
+`/api/v1/terrain/site04/grid` or `/api/v1/terrain/site04/footprint`, or the
+original “ingestion is not enabled” coverage response, indicates that the
+deployed API does not have the current Site04 implementation.
 
-## Proposed build settings (after review and merge)
+In the existing Render service, verify the repository, deploy branch (`main`)
+and root directory (`backend`). Deploy the current reviewed commit. The ordinary
+`pip install -r requirements.txt` build is enough to serve both prepared centre
+patches and the footprint without external TIFFs. Verify these three endpoints
+before changing any frontend environment setting:
+
+| GET path | Expected response |
+| --- | --- |
+| `/api/v1/terrain/site04/grid` | HTTP 200, provisional, 1,024 elevation/slope cells |
+| `/api/v1/terrain/site04/footprint` | HTTP 200, Site04 source extent and centre |
+| `/api/v1/terrain/site04/coverage` | HTTP 200, provisional, 1,024 cells, 88 observed |
+
+Once the prepared patch works, enable arbitrary regional queries if needed. The
+regional reader needs all five pinned TIFFs and GIS dependencies. The prepared
+centre patch uses a separate request and remains available without this setup.
+
+## Optional regional queries
 
 Build Command:
 
@@ -71,8 +89,9 @@ https://render.com/docs/deploys .
 4. Request the same route at latitude 20.19, longitude 30.77: HTTP 422,
    `OUTSIDE_SITE04_COVERAGE` (not clamping or demo data).
 5. Repeat a query after a cold start; verify sources are still present.
-6. Build frontend with the deployed API origin in VITE_API_BASE_URL, then open
-   `#/landing-3d`, enable Real Site04 elevation, and choose regional zoom.
+6. Build the frontend with the deployed API origin in `VITE_API_BASE_URL`. Open
+   `#/landing-3d/site04` for the prepared centre patch. Switch to Site04 footprint
+   and select a location to request a regional patch.
 
 Do not merge or change production until the owner has reviewed this branch and
 the current Start Command/environment path are confirmed.

@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react'
-import { ArrowRight, ChevronDown, Clock3, Compass, FlaskConical, Globe2, Info, LoaderCircle, MapPin, Moon, Orbit, Radio, Rocket, ShieldCheck, Sun, Mountain } from 'lucide-react'
+import { ArrowRight, ChevronDown, Clock3, Compass, FlaskConical, Globe2, Info, MapPin, Moon, Orbit, Radio, Rocket, ShieldCheck, Sun, Mountain } from 'lucide-react'
 import { landingSites, demoAnalyses, initialRequest, type AnalysisRequest, type LandingSite } from './data/mockData'
 import { analyzeMission, checkBackendHealthResult, fetchTerrainSample, isWithinLolaCoverage, type TerrainSampleResult } from './services/analysis'
 import { MetricCard } from './components/MetricCard'
@@ -21,7 +21,8 @@ import { AdaptiveSimulation } from './features/adaptive/AdaptiveSimulation'
 
 function App() {
   const [workspaceHash, setWorkspaceHash] = useState(window.location.hash)
-  const showMoon3D = workspaceHash === '#/landing-3d' || workspaceHash === '#landing-3d'
+  const openSite04 = workspaceHash === '#/landing-3d/site04'
+  const showMoon3D = openSite04 || workspaceHash === '#/landing-3d' || workspaceHash === '#landing-3d'
   const showLandingDemo = workspaceHash === '#/landing-demo'
   const showAdaptive = workspaceHash === '#/adaptive-simulation'
   const activeTab = workspaceTabForHash(workspaceHash)
@@ -63,7 +64,7 @@ function App() {
     && Number.isFinite(terrainResult.sample.elevation_value) ? terrainResult.sample : null
   const currentGeometry = geometryState?.requestKey === JSON.stringify(request) ? geometryState : null
   const geometryAvailable = currentGeometry?.response?.status === 'available' && currentGeometry.response.live_request_executed && currentGeometry.response.observation !== null
-  const statusLabel = backendConnected ? 'Backend connected' : 'Backend unavailable / demo analysis'
+  const statusLabel = connectionPending ? 'Checking API connection…' : backendConnected ? 'API reachable' : 'API health check failed'
 
   useEffect(() => {
     let active = true
@@ -73,14 +74,6 @@ function App() {
         setBackendConnected(connected)
         setConnectionError(error)
         setConnectionPending(false)
-        if (connected && isWithinLolaCoverage(initialRequest.latitude, initialRequest.longitude)) {
-          fetchTerrainSample(initialRequest.latitude, initialRequest.longitude, message => { if (active) setTerrainError(message) })
-            .then((res) => { if (active && res) setTerrainResult(res) })
-            .catch(() => {})
-        }
-      })
-      .catch(() => {
-        if (active) setBackendConnected(false)
       })
     return () => { active = false }
   }, [])
@@ -92,31 +85,28 @@ function App() {
     setBackendConnected(result.connected)
     setConnectionError(result.error)
     setConnectionPending(false)
-    if (result.connected && isWithinLolaCoverage(request.latitude, request.longitude)) {
-      setTerrainLoading(true)
-      setTerrainError(null)
-      const sample = await fetchTerrainSample(request.latitude, request.longitude, setTerrainError)
-      setTerrainResult(sample)
-      setTerrainLoading(false)
-    }
   }
 
-  function selectSite(site: LandingSite) {
+  const { latitude, longitude } = request
+  useEffect(() => {
+    let active = true
+    setTerrainResult(null)
     setTerrainError(null)
-    setRequest((current) => ({ ...current, siteId: site.id, latitude: site.latitude, longitude: site.longitude }))
-    if (backendConnected && isWithinLolaCoverage(site.latitude, site.longitude)) {
-      setTerrainLoading(true)
-      fetchTerrainSample(site.latitude, site.longitude, setTerrainError)
-        .then((res) => {
-          setTerrainResult(res)
-          setTerrainLoading(false)
-        })
-        .catch(() => {
-          setTerrainLoading(false)
-        })
-    } else {
-      setTerrainResult(null)
-    }
+    const shouldRequest = backendConnected && !connectionPending && !isOutOfCoverage
+    setTerrainLoading(shouldRequest)
+    if (!shouldRequest) return
+    const timer = window.setTimeout(() => {
+      fetchTerrainSample(latitude, longitude, error => { if (active) setTerrainError(error) })
+        .then(sample => { if (active) setTerrainResult(sample) })
+        .finally(() => { if (active) setTerrainLoading(false) })
+    }, 250)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [backendConnected, isOutOfCoverage, latitude, longitude, connectionPending])
+
+  function selectSite(site: LandingSite) {
+    setRequest(current => site.id === 'custom'
+      ? { ...current, siteId: site.id }
+      : { ...current, siteId: site.id, latitude: site.latitude, longitude: site.longitude })
   }
 
   async function handleAnalyze(event: FormEvent<HTMLFormElement>) {
@@ -128,7 +118,6 @@ function App() {
     try {
       const res = await analyzeMission(request)
       setAnalysis(res.analysis)
-      setBackendConnected(res.isBackend)
       setAnalyzedRequest({ ...request })
       setMessage(
         res.isBackend
@@ -137,19 +126,7 @@ function App() {
             : 'Backend analysis complete. Illustrative estimates retrieved from backend.'
           : 'Demo analysis complete. No scientific calculations were performed.'
       )
-
-      if (res.isBackend && !isOutOfCoverage) {
-        setTerrainLoading(true)
-        setTerrainError(null)
-        const sample = await fetchTerrainSample(request.latitude, request.longitude, setTerrainError)
-        setTerrainResult(sample)
-        setTerrainLoading(false)
-      } else {
-        setTerrainResult(null)
-      }
     } catch {
-      setBackendConnected(false)
-      setTerrainResult(null)
       setAnalyzedRequest({ ...request })
       setMessage('Demo analysis complete. No scientific calculations were performed.')
     } finally {
@@ -158,13 +135,7 @@ function App() {
   }
 
   return <>
-    <MissionHeader
-      loading={loading}
-      dirty={dirty}
-      date={request.landingDate}
-      backendConnected={backendConnected}
-      isOutOfCoverage={isOutOfCoverage}
-    />
+    <MissionHeader backendConnected={backendConnected} connectionPending={connectionPending} />
     {!showMoon3D && !showLandingDemo && !showAdaptive && <main id="planner" className={`planning-workspace ${activeTab === 'overview' ? 'home-workspace' : ''}`}>
       <div className="page-heading">
         <div>
@@ -182,7 +153,6 @@ function App() {
         <span><MapPin size={14} /><strong>{selected.name}</strong></span>
         <span>{Number.isFinite(request.latitude) ? `${request.latitude.toFixed(2)}°` : 'Unknown'} / {Number.isFinite(request.longitude) ? `${request.longitude.toFixed(2)}°` : 'Unknown'}</span>
         <span><Clock3 size={14} />{request.landingDate || 'Date not set'} UTC</span>
-        <span role="status">{loading ? 'Analyzing…' : dirty ? 'Configuration changed' : 'Configuration ready'}</span>
         <span role="status">{connectionPending ? 'Checking backend…' : connectionError ?? statusLabel}</span>
         <button type="button" className="moon3d-mode-button" disabled={connectionPending} onClick={retryBackend}>{connectionPending ? 'Connecting…' : 'Retry backend connection'}</button>
       </div>
@@ -204,10 +174,12 @@ function App() {
         <section className="panel setup-panel" id="location-controls">
           <div className="section-heading">
             <h2><Compass size={18} />Landing site selection</h2>
-            <span className="step-label">01 / CONFIGURE</span>
           </div>
-          <form id="mission-configuration" onSubmit={handleAnalyze}>
-            <fieldset disabled={loading}>
+          <form id="mission-configuration" onSubmit={event => {
+            event.preventDefault()
+            window.location.hash = '/analysis'
+          }}>
+            <fieldset>
               <label htmlFor="site">Landing site</label>
               <div className="select-wrap">
                 <MapPin size={16} />
@@ -227,24 +199,23 @@ function App() {
                 </div>
               </div>
               <a className="schedule-shortcut" href="#/schedule">Landing date: {request.landingDate} UTC · Edit schedule</a>
-              <div className="duration-note"><Clock3 size={14} />Analysis window<span>7 Earth days</span></div>
+
               <button className="analyze-button" type="submit">
-                {loading ? <LoaderCircle className="spin" size={17} /> : <Rocket size={17} />}
-                {loading ? 'Analyzing mission…' : 'Analyze Mission'}
-                {!loading && <ArrowRight size={17} />}
+                <Rocket size={17} /> Inspect site analysis <ArrowRight size={17} />
               </button>
             </fieldset>
-            <p className="form-note"><Info size={13} />{backendConnected && !isOutOfCoverage ? 'Connected to FastAPI backend' : 'Runs locally using sample data'}</p>
+            <p className="form-note"><Info size={13} />Horizons geometry is requested on Site Analysis. Terrain availability depends on coverage.</p>
           </form>
         </section>
 
-          <LunarMap request={request} selected={selected} onSelect={selectSite} disabled={loading} />
+          <LunarMap request={request} selected={selected} onSelect={selectSite}
+            terrainStatus={terrainSample ? 'Point elevation available' : isOutOfCoverage ? 'Outside local LOLA point coverage' : terrainLoading ? 'Loading point elevation…' : 'Point elevation unavailable'} />
         </div>
       </section>}
       {activeTab === 'analysis' && <section className="workspace-view" data-workspace-page="analysis" aria-label="Site Analysis">
         <div className="workspace-section-label"><span>SITE ANALYSIS</span><p>Selected-location provider results → separate sources and limitations</p></div>
         <AnalysisDerivation request={request} siteName={selected.name} terrain={terrainSample}
-          terrainLoading={terrainLoading} outsideCoverage={isOutOfCoverage} geometry={currentGeometry} />
+          terrainLoading={terrainLoading} terrainError={terrainError} outsideCoverage={isOutOfCoverage} geometry={currentGeometry} />
         <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={setGeometryState} initialState={geometryState} />
         <p className="tab-context-note">Terrain source, coverage, and checksum details are in <a href="#/coverage">Data &amp; Coverage</a>. Geometry is point-in-time context, not a schedule.</p>
         <section className="panel terrain-result" aria-label="Selected-location terrain result">
@@ -263,16 +234,14 @@ function App() {
           siteName={selected.name}
           geometry={currentGeometry}
           onGeometryState={setGeometryState}
-          loading={loading}
           onDateChange={(landingDate) =>
             setRequest((current) => ({ ...current, landingDate }))
           }
-          onAnalyze={handleAnalyze}
         />
       )}
       {activeTab === 'coverage' && <section className="workspace-view" data-workspace-page="coverage" aria-label="Data and Coverage">
         <div className="workspace-section-label"><span>DATA &amp; COVERAGE</span><p>Provenance, coverage boundaries, and unresolved data</p></div>
-        <Site04TerrainExplorer point={request} onSelect={point => setRequest(current => ({ ...current, ...point, siteId: 'custom' }))} />
+        <Site04TerrainExplorer />
       {terrainSample && terrainResult ? (
         <TerrainProvenancePanel
           result={terrainResult}
@@ -286,7 +255,7 @@ function App() {
               <Mountain size={15} />
               <span>LOLA TERRAIN COVERAGE &amp; LIMITATIONS</span>
               {isOutOfCoverage && (
-                <span className="small-badge warning">Demo fallback — outside local LOLA coverage</span>
+                <span className="small-badge warning">Outside local point coverage</span>
               )}
             </div>
             <ul className="terrain-limitations-list">
@@ -304,7 +273,7 @@ function App() {
             <div><dt>LOLA terrain</dt><dd>Local point elevation only where a matching backend response is available. Missing coverage remains unavailable; demo fallbacks are not measured terrain.</dd></div>
             <div><dt>JPL Horizons geometry</dt><dd>Model-derived directions when available. See Site Analysis for source status and limitations; a direction is not terrain-cleared visibility or guaranteed communications.</dd></div>
             <div><dt>Demo comparisons and timeline</dt><dd>Fixed local fixtures; independent of NASA-derived provider values.</dd></div>
-            <div><dt>Site04 observation coverage</dt><dd>A provisional 32×32 observation-count grid is available through the coverage API when its artifact passes integrity checks. Open 3D Landing to request the separate projected X/Y grid and inspect current status. No latitude/longitude overlay is verified.</dd></div>
+            <div><dt>Site04 observation coverage</dt><dd>A provisional 32×32 observation-count grid is available through the coverage API when its artifact passes integrity checks. Open 3D Landing to view the separate projected X/Y grid and inspect current status.</dd></div>
           </dl>
           <p><a href="#/landing-3d">Open Site04 coverage in 3D Landing</a></p>
           <p>No validated spatial suitability grid or recommendation is available.</p>
@@ -316,9 +285,13 @@ function App() {
         <div className="results-heading">
           <div>
             <h2>Last analyzed demo fixture <span>/ {analyzedSite.name}</span></h2>
-            <p role="status">{dirty && !loading ? 'Configuration changed. Analyze Mission to refresh the results.' : message}</p>
+            <p role="status">{dirty && !loading ? 'Configuration changed. Refresh demo estimates to use this selection.' : message}</p>
           </div>
-          <span className="results-date"><i className="legend-dot" />{analyzedRequest.landingDate} · 7-day window</span>
+          <form onSubmit={handleAnalyze}>
+            <button className="moon3d-mode-button" disabled={loading || !Number.isFinite(request.latitude) || !Number.isFinite(request.longitude) || !request.landingDate}>
+              {loading ? 'Loading demo…' : 'Refresh demo estimates'}
+            </button>
+          </form>
         </div>
         <div className={`metrics-grid ${loading ? 'loading-results' : ''}`}>
           <MetricCard code="ILLUM / 01" label="Sunlight availability" value={analysis.sunlight} detail="Illustrative illumination coverage" icon={Sun} tone="amber" />
@@ -349,7 +322,7 @@ function App() {
         <FlaskConical size={17} />
         <p><strong>ILLUSTRATIVE DEMO</strong> The Moon surface and coloured preset patches are illustrative fixtures. Real Site04 observation counts appear in a separate projected X/Y panel; provider point results have their own provenance. Overall risk remains Unknown.</p>
       </div>
-      <Moon3DView initialSelectedId={request.siteId} initialLocation={{ latitude: request.latitude, longitude: request.longitude }} date={request.landingDate} />
+      <Moon3DView key={openSite04 ? 'site04' : 'moon'} initialSite04={openSite04} initialSelectedId={request.siteId} initialLocation={{ latitude: request.latitude, longitude: request.longitude }} date={request.landingDate} />
     </main>}
   </>
 }

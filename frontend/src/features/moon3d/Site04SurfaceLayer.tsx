@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { fetchSite04Terrain, site04ToGeographic, type GeographicPoint, type Site04Terrain, type Site04Footprint } from '../../services/site04Terrain'
+import { site04ToGeographic, type Site04Terrain, type Site04Footprint } from '../../services/site04Terrain'
 
 export function Site04FootprintLayer({footprint,project,showLocator=true}:{footprint:Site04Footprint|null;showLocator?:boolean;project:(lat:number,lon:number)=>{screenX:number;screenY:number;z:number}}){
   if(!footprint)return null
@@ -11,24 +10,6 @@ export function Site04FootprintLayer({footprint,project,showLocator=true}:{footp
     {showLocator && <circle cx={center.screenX} cy={center.screenY} r="5" fill="#092b38" stroke="#5ee8ff" strokeWidth="2" />}
     <text x={center.screenX+9} y={center.screenY-10} fill="#9cf1ff" stroke="#07121d" strokeWidth="3" paintOrder="stroke" fontSize="11">{showLocator?'Site04 · locator, not data extent':'Site04 centre · tiny filled square is queried data'}</text>
   </g>
-}
-
-export function useSite04Surface(enabled: boolean, point: GeographicPoint) {
-  const [data, setData] = useState<Site04Terrain | null>(null)
-  const [status, setStatus] = useState('Layer off')
-  useEffect(() => {
-    setData(null)
-    if (!enabled) { setStatus('Layer off'); return }
-    const controller = new AbortController()
-    setStatus('Loading real Site04 window')
-    const timeout = window.setTimeout(() => { setStatus('Site04 request timed out; retry the layer.'); controller.abort() }, 20000)
-    fetchSite04Terrain(point,controller.signal).then(result => {
-      if (!controller.signal.aborted) { setData(result); setStatus(result.status === 'provisional' ? 'Real product values · provisional' : result.detail) }
-    }).catch(error => { if (!controller.signal.aborted) setStatus(error instanceof Error ? error.message : 'Site04 unavailable') })
-      .finally(() => window.clearTimeout(timeout))
-    return () => { controller.abort(); window.clearTimeout(timeout) }
-  }, [enabled, point.latitude, point.longitude])
-  return { data, status }
 }
 
 export function Site04SurfaceLayer({ data, project }: { data: Site04Terrain | null; project: (lat: number, lon: number) => {screenX:number;screenY:number;z:number} }) {

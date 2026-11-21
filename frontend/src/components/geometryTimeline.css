@@ -1,0 +1,18 @@
+.geometry-series { padding: clamp(14px, 2vw, 24px); min-width: 0; }
+.geometry-series > p { margin-block: 7px; }
+.elevation-plot { margin-top: 18px; }
+.elevation-plot-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; }
+.elevation-plot-heading h3, .geometry-sample-reading h3 { font-size: 1rem; }
+.elevation-plot-heading p, .geometry-time-axis, .geometry-time-picker small { color: #adc2d0; font-size: .8rem; }
+.elevation-plot svg { display: block; width: 100%; cursor: crosshair; }
+.geometry-time-axis { display: flex; justify-content: space-between; gap: 8px; padding-inline: clamp(8px, 11%, 61px) 12px; }
+.geometry-time-axis span:last-child { text-align: right; }
+.geometry-time-picker { display: grid; gap: 8px; margin-block: 20px; }
+.geometry-time-picker label { display: flex; flex-wrap: wrap; gap: 6px 12px; }
+.geometry-time-picker input { width: 100%; accent-color: #77ddd7; }
+.geometry-sample-readings { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 10px; margin-bottom: 12px; }
+.geometry-sample-reading { border: 1px solid #304754; padding: 12px; border-radius: 8px; }
+.geometry-sample-reading dl { margin-bottom: 0; }
+.geometry-sample-reading dl div { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; }
+.geometry-sample-reading dd { margin: 0; color: #d8edf7; font-variant-numeric: tabular-nums; }
+.geometry-series summary { cursor: pointer; margin-top: 10px; }

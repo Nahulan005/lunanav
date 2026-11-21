@@ -8,60 +8,62 @@ interface Props {
   siteName: string
   terrain: TerrainSample | null
   terrainLoading: boolean
+  terrainError: string | null
   outsideCoverage: boolean
   geometry: GeometryPanelState | null
 }
 
-export function AnalysisDerivation({ request, siteName, terrain, terrainLoading, outsideCoverage, geometry }: Props) {
-  // Do not explain a previous configuration as though it described this selection.
+const coordinate = (value: number) => Number.isFinite(value) ? `${value.toFixed(4)}°` : 'Unknown'
+const altitude = (value: number) => value === 0 ? 'on the geometric horizon'
+  : `${Math.abs(value).toFixed(2)}° ${value > 0 ? 'above' : 'below'} the geometric horizon`
+
+export function AnalysisDerivation({ request, siteName, terrain, terrainLoading, terrainError, outsideCoverage, geometry }: Props) {
   const current = geometry?.requestKey === JSON.stringify(request) ? geometry : null
   const response = current?.response
   const observation = !current?.loading && response?.status === 'available' && response.live_request_executed
     ? response.observation : null
-  const coordinate = (value: number) => Number.isFinite(value) ? `${value.toFixed(4)}°` : 'Unknown'
-  const terrainStatus = terrainLoading ? 'Requesting sample'
-    : terrain ? 'Returned local-derived elevation'
-      : outsideCoverage ? 'Unavailable: outside local LOLA coverage' : 'Unavailable: no matching local-derived sample'
-  const geometryStatus = current?.loading ? 'Requesting geometry'
-    : observation ? 'Returned model-derived directions'
-      : `Unavailable${response ? `: provider status ${response.status}` : ': no matching provider response'}`
+  const utc = observation?.timestamp_utc.replace('T', ' ').replace(/(?:Z|\+00:00)$/, ' UTC')
+  const terrainStatus = terrainLoading ? 'Requesting a terrain sample…'
+    : terrain ? `LOLA returned ${terrain.elevation_value} ${terrain.units} for the cell containing the selected coordinates.`
+      : outsideCoverage ? 'This site is outside the local LOLA point-elevation dataset.'
+        : terrainError ?? 'No matching LOLA point elevation is available.'
 
   return <section className="panel derivation-panel" aria-labelledby="analysis-derivation-title">
     <div className="section-heading">
-      <h2 id="analysis-derivation-title"><Info size={16} />How this result was derived</h2>
-      <span className="small-badge">NOT EVALUATED</span>
+      <h2 id="analysis-derivation-title"><Info size={16} />What the data tells us</h2>
+      <span className="small-badge">SUITABILITY NOT EVALUATED</span>
     </div>
-    <p className="tab-context-note">Suitability: <strong>Not evaluated.</strong> Available point data is context only; missing required inputs and unconfigured thresholds prevent a classification. Unknown is not a pass.</p>
-    <dl className="derivation-steps">
-      <div><dt>1 · Selection &amp; reference</dt><dd>
-        {siteName}: {coordinate(request.latitude)} latitude / {coordinate(request.longitude)} east longitude; {request.landingDate || 'Unavailable date'} UTC date.
-        <span>Terrain frame: {terrain?.coordinate_reference_system || 'Unavailable · no matching terrain metadata'}.</span>
-        <span>Geometry frame: {observation?.reference_frame || 'Unavailable'}; observation UTC: {observation?.timestamp_utc || 'Unavailable · date selection alone does not specify an observation time'}.</span>
-      </dd></div>
-      <div><dt>2 · Sources returned</dt><dd>
-        <span>LOLA: {terrainStatus}{terrain ? ` · ${terrain.product_name} ${terrain.product_version} · ${terrain.source_name}` : ''}.</span>
-        <span>Horizons: {geometryStatus}{response ? ` · ${response.provider_name}` : ''}.</span>
-        {response?.detail && !observation && <span>{response.detail}</span>}
-      </dd></div>
-      <div><dt>3 · Operations performed</dt><dd>
-        <span>{terrain ? `Terrain provider reports: ${terrain.sampling_method}. Returned elevation: ${terrain.elevation_value} ${terrain.units}; sampled center: ${terrain.coordinate_used.latitude}°, ${terrain.coordinate_used.longitude}°.` : 'No matching terrain sampling result is available to explain.'}</span>
-        <span>{observation ? 'The Horizons provider returned apparent Sun/Earth directions for the stated observer and epoch. The frontend checks the response and formats those angles for display.' : 'No matching available Horizons observation is used; no substitute geometry is calculated.'}</span>
-        <span>The frontend does not combine these sources into a suitability score, terrain-cleared visibility, illumination duration, or communications result.</span>
-      </dd></div>
-      <div><dt>4 · Missing requirements</dt><dd>Validated site-scale slope, terrain horizon by azimuth, and configured mandatory thresholds/margins are unavailable in this view. Terrain-aware time-window results are also unavailable; point-in-time geometry cannot supply them.</dd></div>
-      <div><dt>5 · Outcome</dt><dd>No suitability calculation ran. The selected location has no evaluated pass/fail classification, score, or justified recommendation. Fixed demo comparisons are confined to <a href="#/compare">Compare Scenarios</a>.</dd></div>
-    </dl>
-    {(terrain || response) && <details className="derivation-provenance"><summary>Returned provenance &amp; limitations</summary>
+    {observation ? <p className="analysis-finding">
+      At <strong>{siteName}</strong> on {utc}, the Sun’s centre was <strong>{altitude(observation.sun.elevation_deg)}</strong> and Earth’s centre was <strong>{altitude(observation.earth.elevation_deg)}</strong>.
+    </p> : <p className="analysis-finding">{current?.loading ? 'Requesting Horizons geometry for this site and date…' : 'No Horizons angles are available for this site and date yet. See the geometry panel below for the request status.'}</p>}
+    <p className="tab-context-note">{terrainStatus}</p>
+    <p className="tab-context-note">Terrain clearance needs the horizon angle in the direction of each target. Landing suitability also needs slope, roughness and mission thresholds.</p>
+    <details className="derivation-provenance">
+      <summary>How we got this</summary>
+      <dl className="derivation-steps">
+        <div><dt>Inputs</dt><dd>{siteName} · {coordinate(request.latitude)} latitude · {coordinate(request.longitude)} east longitude · {request.landingDate || 'Date not set'} UTC.</dd></div>
+        <div><dt>Horizons response</dt><dd>{observation ? <>
+          <span>{response?.provider_name} · {utc}</span>
+          <span>Sun: {observation.sun.azimuth_deg.toFixed(2)}° azimuth, {observation.sun.elevation_deg.toFixed(2)}° elevation.</span>
+          <span>Earth: {observation.earth.azimuth_deg.toFixed(2)}° azimuth, {observation.earth.elevation_deg.toFixed(2)}° elevation.</span>
+          <span>{observation.reference_frame} · {observation.reference_ellipsoid}</span>
+        </> : current?.loading ? 'Awaiting provider response.' : response?.detail ?? current?.error ?? 'No matching observation returned.'}</dd></div>
+        <div><dt>LOLA point sample</dt><dd>{terrainStatus}{terrain && <>
+          <span>{terrain.product_name} {terrain.product_version} · {terrain.sampling_method}</span>
+          <span>Cell centre: {coordinate(terrain.coordinate_used.latitude)} latitude, {coordinate(terrain.coordinate_used.longitude)} east longitude.</span>
+        </>}</dd></div>
+        <div><dt>Interpretation</dt><dd>{observation ? 'LunaNav used the sign of each returned elevation angle to describe its position relative to 0°, the geometric horizon.' : 'There were no returned angles to compare to the geometric horizon.'} Checking for a terrain obstruction would require a separate horizon profile by azimuth.</dd></div>
+      </dl>
+    </details>
+    {(terrain || response) && <details className="derivation-provenance"><summary>Sources and technical limitations</summary>
       {terrain && <>
-        <p>Terrain source: {terrain.source_url}</p>
-        <p>Reference radius: {terrain.reference_radius_m} m; nodata status: {terrain.nodata_status}; validation: {terrain.validation.status}. Acquisition timestamp: unavailable in the current response.</p>
+        <p><a href={terrain.source_url}>{terrain.source_name}</a> · {terrain.coordinate_reference_system}</p>
         <p>Source SHA-256: {terrain.checksum}<br />Subset SHA-256: {terrain.subset_checksum}</p>
-        <ul>{terrain.limitations.map((text, index) => <li key={`terrain-${index}`}>{text}</li>)}</ul>
+        <ul>{terrain.limitations.map(text => <li key={text}>{text}</li>)}</ul>
       </>}
       {response && <>
-        <p>Geometry provenance: {response.provenance_url}; live request executed: {response.live_request_executed ? 'yes (does not alone establish a successful result)' : 'no'}.</p>
-        {observation && <p>Geometry reference surface: {observation.reference_ellipsoid}.</p>}
-        <ul>{response.limitation_explanation.map((text, index) => <li key={`geometry-${index}`}>{text}</li>)}</ul>
+        <p><a href={response.provenance_url}>JPL Horizons provenance</a> · Live request executed: {response.live_request_executed ? 'yes' : 'no'}.</p>
+        <ul>{response.limitation_explanation.map(text => <li key={text}>{text}</li>)}</ul>
       </>}
     </details>}
   </section>

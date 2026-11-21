@@ -7,6 +7,7 @@ export interface GeometryPanelState {
   requestKey: string
   response: SunEarthGeometryResponse | null
   loading: boolean
+  error?: string
 }
 
 export function SunEarthGeometryPanel({ request, onStateChange, initialState }: {
@@ -17,14 +18,14 @@ export function SunEarthGeometryPanel({ request, onStateChange, initialState }: 
   const [cached] = useState(() => initialState?.requestKey === JSON.stringify(request) && !initialState.loading ? initialState : null)
   const [response, setResponse] = useState<SunEarthGeometryResponse | null>(cached?.response ?? null)
   const [loading, setLoading] = useState(!cached && geometryConfigured)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(cached?.error ?? '')
   const [attempt, setAttempt] = useState(0)
   const { latitude, longitude, landingDate, siteId } = request
   const requestKey = JSON.stringify(request)
 
   useEffect(() => {
-    onStateChange?.({ requestKey, response, loading })
-  }, [onStateChange, requestKey, response, loading])
+    onStateChange?.({ requestKey, response, loading, error })
+  }, [onStateChange, requestKey, response, loading, error])
 
   useEffect(() => {
     if (cached && attempt === 0) return
@@ -43,7 +44,11 @@ export function SunEarthGeometryPanel({ request, onStateChange, initialState }: 
       timeout = setTimeout(() => controller.abort(), 20000)
       fetchSunEarthGeometry({ latitude, longitude, landingDate, siteId }, controller.signal)
         .then((data) => { if (active) setResponse(data) })
-        .catch(() => { if (active) setError('Geometry unavailable, unsupported, or outside provider coverage.') })
+        .catch(reason => {
+          if (active) setError(controller.signal.aborted ? 'Geometry request timed out. Retry to check again.'
+            : reason instanceof TypeError ? 'Could not reach the geometry service. Check the connection and retry.'
+              : reason instanceof Error ? reason.message : 'Geometry request failed.')
+        })
         .finally(() => {
           clearTimeout(timeout)
           if (active) setLoading(false)
@@ -76,7 +81,7 @@ export function SunEarthGeometryPanel({ request, onStateChange, initialState }: 
       <div><Globe2 size={15} /><span>Earth elevation<strong>{angle(sample?.earth.elevation_deg)}</strong></span></div>
     </div>
     <p className="geometry-epoch">UTC observation: {sample ? new Date(sample.timestamp_utc).toISOString().replace('T', ' ').replace('.000Z', ' UTC') : 'Not available'}</p>
-    {!sample && !loading && <p className="geometry-note">{!geometryConfigured ? 'Backend geometry is not configured.' : error || response?.detail || 'No available model-derived observation.'} Existing dashboard estimates remain illustrative; no substitute geometry is shown.</p>}
+    {!sample && !loading && <p className="geometry-note">{!geometryConfigured ? 'Backend geometry is not configured.' : error || response?.detail || 'No available model-derived observation.'} </p>}
     {geometryConfigured && <button type="button" className="moon3d-mode-button" disabled={loading} onClick={() => { setResponse(null); setError(''); setLoading(true); setAttempt(n => n + 1) }}>{loading ? 'Requesting geometry…' : 'Retry geometry request'}</button>}
     <p className="geometry-note">Model-derived apparent directions only, not scientifically validated here. No terrain masking, RF communication assessment, illumination-duration prediction, or landing-safety assessment.</p>
     {response && response.limitation_explanation.length > 0 && <details className="geometry-limitations">

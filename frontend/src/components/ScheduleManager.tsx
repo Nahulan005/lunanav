@@ -1,5 +1,4 @@
 
-import type { FormEvent } from 'react'
 import { Clock3, MapPin } from 'lucide-react'
 import type { AnalysisRequest } from '../data/mockData'
 import { SunEarthGeometryPanel, type GeometryPanelState } from './SunEarthGeometryPanel'
@@ -9,20 +8,16 @@ interface ScheduleManagerProps {
   request: AnalysisRequest
   siteName: string
   geometry: GeometryPanelState | null
-  loading: boolean
   onGeometryState: (state: GeometryPanelState) => void
   onDateChange: (date: string) => void
-  onAnalyze: (event: FormEvent<HTMLFormElement>) => void
 }
 
 export function ScheduleManager({
   request,
   siteName,
   geometry,
-  loading,
   onDateChange,
   onGeometryState,
-  onAnalyze,
 }: ScheduleManagerProps) {
   return (
     <section className="workspace-view" data-workspace-page="schedule" aria-label="Mission Schedule">
@@ -31,7 +26,7 @@ export function ScheduleManager({
         <p>Landing configuration · geometry context · schedule availability</p>
       </div>
 
-      <form className="panel schedule-controls" onSubmit={onAnalyze}>
+      <section className="panel schedule-controls">
         <h2><Clock3 size={17} /> Configure mission date</h2>
 
         <div className="schedule-site-context">
@@ -46,41 +41,22 @@ export function ScheduleManager({
         <input
           id="landing-date"
           type="date"
-          disabled={loading}
           required
           value={request.landingDate}
           onChange={(event) => onDateChange(event.target.value)}
         />
 
-        <p className="unavailable-message">
-          <strong>Real schedule windows unavailable.</strong>
-          No verified terrain-aware illumination or geometric visibility
-          windows are supplied by the current API. Point-in-time geometry
-          does not establish a schedule.
-        </p>
-
-        <button type="submit" className="analyze-button" disabled={loading}>
-          {loading ? 'Analyzing…' : 'Analyze Mission'}
-        </button>
-      </form>
+        <p className="tab-context-note">Changing the date requests new geometry samples for this site.</p>
+      </section>
 
       <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={onGeometryState} initialState={geometry} />
       <GeometryTimeline key={JSON.stringify(request)} geometry={geometry} />
 
       <section className="panel schedule-window-status">
-        <h2>Mission schedule windows</h2>
-        <div>
-          <strong>Illumination windows</strong>
-          <span className="data-unavailable">Unavailable · not calculated</span>
-        </div>
-        <div>
-          <strong>Earth communication windows</strong>
-          <span className="data-unavailable">Unavailable · not calculated</span>
-        </div>
-        <div>
-          <strong>Terrain-aware visibility windows</strong>
-          <span className="data-unavailable">Unavailable · no horizon analysis</span>
-        </div>
+        <h2>What’s needed to calculate windows</h2>
+        <div><strong>Sunlight at the site</strong><span>Terrain horizon along the Sun’s path.</span></div>
+        <div><strong>Direct Earth visibility</strong><span>Terrain horizon along Earth’s path.</span></div>
+        <div><strong>Radio communications</strong><span>Earth visibility, antenna geometry and link requirements.</span></div>
       </section>
     </section>
   )

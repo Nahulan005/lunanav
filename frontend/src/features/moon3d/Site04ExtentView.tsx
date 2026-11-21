@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { site04ToGeographic, type GeographicPoint, type Site04Footprint, type Site04Terrain } from '../../services/site04Terrain'
 import './site04Extent.css'
 
-export function Site04ExtentView({footprint,data,onSelect,onOpenTerrain}:{footprint:Site04Footprint|null;data:Site04Terrain|null;onSelect:(point:GeographicPoint)=>void;onOpenTerrain:()=>void}) {
+export function Site04ExtentView({footprint,data,onSelect,onOpenTerrain}:{footprint:Site04Footprint|null;data:Site04Terrain|null;onSelect:(point:GeographicPoint)=>void;onOpenTerrain?:()=>void}) {
   const [x,setX]=useState(''),[y,setY]=useState('')
   if(!footprint)return <section className="site04-extent-view"><p>Source extent unavailable.</p></section>
   const b=footprint.projected_bounds, window=data?.returned_bounds
@@ -27,9 +27,9 @@ export function Site04ExtentView({footprint,data,onSelect,onOpenTerrain}:{footpr
       {window && <rect data-site04-query-window="true" x={projectX(window.min_x)} y={projectY(window.max_y)} width={width!/(b.max_x-b.min_x)*320} height={height!/(b.max_y-b.min_y)*320} fill="#7aeaff" stroke="#f5d17b" strokeWidth="1" />}
     </svg>
     <div className="site04-extent-legend"><p><span className="extent-outline" />Cyan dashed outline: entire source extent.</p><p><span className="extent-query" />Small filled square: {width!==null ? `${width} × ${height} m currently requested` : 'no window loaded'}.</p><p><span className="extent-unqueried" />Grey: no elevation values displayed in this diagram.</p></div>
-    <p>Click inside the box to request a different small patch. The square stays at its true relative size; <strong>open 3D terrain</strong> to inspect that patch's shape.</p>
+    <p>Click inside the box or enter X and Y to request a terrain patch. The square shows the returned patch at its actual relative size.</p>
     <form onSubmit={event=>{event.preventDefault();if(valid)onSelect(site04ToGeographic(Number(x),Number(y)))}}><label>X (m)<input type="number" value={x} placeholder="Easting" onChange={event=>setX(event.target.value)} /></label><label>Y (m)<input type="number" value={y} placeholder="Northing" onChange={event=>setY(event.target.value)} /></label><button type="submit" disabled={!valid}>Load patch</button></form>
-    <button type="button" onClick={onOpenTerrain} disabled={!data?.cells.length}>Open this patch in 3D terrain</button>
+    {onOpenTerrain && <button type="button" onClick={onOpenTerrain} disabled={!data?.cells.length}>Open this patch in 3D terrain</button>}
     <p>{footprint.frame}. Geographic placement remains provisional.</p>
   </section>
 }

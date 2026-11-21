@@ -1,6 +1,7 @@
 """Optional local GIS reader for bounded Site04 requests. No raw data in Git."""
 from functools import lru_cache
 import hashlib
+import logging
 import math
 import os
 from pathlib import Path
@@ -17,6 +18,9 @@ PINS = {
     "slperr": "067cd4d8e3e8c14a9a5be1915242532f85063f1b300f248407cc8c8b68e90695",
     "ldec": "fcc8c2219ae2368d5b2a1f6aec05fcf96cf725f3035ac8d80efc312a4ff29227",
 }
+
+
+logger = logging.getLogger(__name__)
 
 
 class OutsideSite04Coverage(ValueError):
@@ -45,7 +49,7 @@ def read_window(latitude: float, longitude: float, width: int = 32) -> Site04Ter
         raise OutsideSite04Coverage("Requested coordinate is outside the Site04 source raster footprint.")
     directory = os.getenv("SITE04_DATA_DIR")
     if not directory:
-        return Site04TerrainResponse(status="unavailable", detail="Regional Site04 reader is not configured. Set SITE04_DATA_DIR to the five pinned TIFFs.", limitations=["The fixed central artifact remains available without GIS tooling."])
+        return Site04TerrainResponse(status="unavailable", detail="This backend has the prepared centre patch. Other locations require the full Site04 raster set.", limitations=["The fixed central artifact remains available without GIS tooling."])
     try:
         import numpy as np
         import rasterio
@@ -94,4 +98,9 @@ def read_window(latitude: float, longitude: float, width: int = 32) -> Site04Ter
         payload["limitations"].append("Lunar coordinates use the product's documented MOON_ME/DE421 frame; no transformation to other lunar frames. Mathematical conversion is checked, not independent absolute geolocation accuracy. Surface Z datum and slope baseline remain unresolved.")
         return Site04TerrainResponse.model_validate(payload)
     except (ImportError, OSError, ValueError) as error:
-        return Site04TerrainResponse(status="unavailable",detail=f"Regional Site04 data unavailable: {error}",limitations=["No demo substitute; install optional GIS reader and configure intact pinned TIFFs."])
+        logger.warning("Site04 regional read failed: %s", error)
+        return Site04TerrainResponse(
+            status="unavailable",
+            detail="The backend could not read this regional patch. Try the prepared centre patch.",
+            limitations=["Regional reads require the GIS reader and all five intact Site04 rasters."],
+        )
