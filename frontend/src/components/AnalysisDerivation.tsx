@@ -25,7 +25,7 @@ export function AnalysisDerivation({ request, siteName, terrain, terrainLoading,
   const utc = observation?.timestamp_utc.replace('T', ' ').replace(/(?:Z|\+00:00)$/, ' UTC')
   const terrainStatus = terrainLoading ? 'Requesting a terrain sample…'
     : terrain ? `LOLA returned ${terrain.elevation_value} ${terrain.units} for the cell containing the selected coordinates.`
-      : outsideCoverage ? 'This site is outside the local LOLA point-elevation dataset.'
+      : outsideCoverage ? 'No point sample is available here: the local LDEM_4 cutout covers the Apollo 17 region only and has roughly 7.6 km north–south pixel spacing. Site04 is a separate high-resolution south-polar raster with its own footprint; neither integration covers every preset.'
         : terrainError ?? 'No matching LOLA point elevation is available.'
 
   return <section className="panel derivation-panel" aria-labelledby="analysis-derivation-title">

@@ -27,6 +27,18 @@ export function site04ToGeographic(x: number, y: number): GeographicPoint {
   return { latitude: -90+2*Math.atan2(Math.hypot(x,y),2*1737400)*180/Math.PI, longitude: Math.atan2(x,y)*180/Math.PI }
 }
 
+/** Forward projection for the inspected Site04 product, in native metres. */
+export function site04ToProjected({ latitude, longitude }: GeographicPoint) {
+  const radians = Math.PI / 180
+  const radius = 2 * 1737400 * Math.tan((90 + latitude) * radians / 2)
+  return { x: radius * Math.sin(longitude * radians), y: radius * Math.cos(longitude * radians) }
+}
+
+export function containsSite04Point(bounds: NativeBounds, { x, y }: { x: number; y: number }) {
+  // Match the raster reader's left/top inclusive pixel registration.
+  return x >= bounds.min_x && x < bounds.max_x && y > bounds.min_y && y <= bounds.max_y
+}
+
 async function read(path: string, signal: AbortSignal): Promise<unknown> {
   let response: Response
   try {

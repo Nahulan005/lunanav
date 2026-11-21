@@ -966,7 +966,7 @@ export function Moon3DView({ initialSelectedId, initialLocation, date = '2027-03
       <Site04CoverageGrid data={site04Coverage} loading={coverageLoading} error={coverageError} onRetry={() => { setSite04Coverage(null); setCoverageError(null); setCoverageLoading(true); setCoverageAttempt(n => n + 1) }} />
       {/* Global Module Disclaimer */}
       {!realSite04 && !demoTerrain && <><h3>Selected-coordinate provider context · separate from demo fixtures</h3>
-      <ScreeningDetails key={`${surface.latitude},${surface.longitude},${date}`} location={surface} date={date} /></>}
+      <ScreeningDetails key={`${selectedSite?.id},${surface.latitude},${surface.longitude},${date}`} location={surface} date={date} siteId={selectedSite?.id} onSelect={setSurface} /></>}
       <div className="moon3d-disclaimer-banner">
         <CheckCircle2 size={16} />
         <div>

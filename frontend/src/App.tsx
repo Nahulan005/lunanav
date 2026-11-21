@@ -11,6 +11,7 @@ import { SunEarthGeometryPanel, type GeometryPanelState } from './components/Sun
 import { Moon3DView } from './features/moon3d/Moon3DView'
 import { workspaceTabs, workspaceTabForHash } from './components/workspaceNavigation'
 import { AnalysisDerivation } from './components/AnalysisDerivation'
+import { PresetGeometryGraphs } from './components/PresetGeometryGraphs'
 import { MissionHome } from './components/MissionHome'
 import './cosmic.css'
 import './orbital.css'
@@ -217,6 +218,7 @@ function App() {
         <AnalysisDerivation request={request} siteName={selected.name} terrain={terrainSample}
           terrainLoading={terrainLoading} terrainError={terrainError} outsideCoverage={isOutOfCoverage} geometry={currentGeometry} />
         <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={setGeometryState} initialState={geometryState} />
+        <PresetGeometryGraphs landingDate={request.landingDate} />
         <p className="tab-context-note">Terrain source, coverage, and checksum details are in <a href="#/coverage">Data &amp; Coverage</a>. Geometry is point-in-time context, not a schedule.</p>
         <section className="panel terrain-result" aria-label="Selected-location terrain result">
           <div className="section-heading"><h2><Mountain size={17} />LOLA point elevation</h2><span className="small-badge">{terrainSample ? 'LOCAL-DERIVED' : 'UNAVAILABLE'}</span></div>
@@ -270,7 +272,7 @@ function App() {
         <section className="panel coverage-explanation">
           <h2>Source and interpretation guide</h2>
           <dl>
-            <div><dt>LOLA terrain</dt><dd>Local point elevation only where a matching backend response is available. Missing coverage remains unavailable; demo fallbacks are not measured terrain.</dd></div>
+            <div><dt>LOLA terrain</dt><dd>The point endpoint uses a local 64×64 LDEM_4 cutout around Apollo 17 at about 7.6 km north–south spacing. Site04 is a separate 5 m/pixel south-polar raster, shown only inside its own footprint. Outside these local data extents, Unavailable is correct; no global LOLA surface is installed in this app.</dd></div>
             <div><dt>JPL Horizons geometry</dt><dd>Model-derived directions when available. See Site Analysis for source status and limitations; a direction is not terrain-cleared visibility or guaranteed communications.</dd></div>
             <div><dt>Demo comparisons and timeline</dt><dd>Fixed local fixtures; independent of NASA-derived provider values.</dd></div>
             <div><dt>Site04 observation coverage</dt><dd>A provisional 32×32 observation-count grid is available through the coverage API when its artifact passes integrity checks. Open 3D Landing to view the separate projected X/Y grid and inspect current status.</dd></div>

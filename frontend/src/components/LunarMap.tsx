@@ -22,6 +22,15 @@ export function LunarMap({ selected, request, onSelect, terrainStatus }: { selec
       <div className="map-scale"><span /><span>ILLUSTRATIVE · NOT TO SCALE</span></div>
       <span className="map-reticle"><Crosshair size={14} />LUNAR FRAME</span>
     </div>
+    <div className="map-site-choices" aria-label="Choose a preset landing site">
+      {landingSites.filter(site => site.id !== 'custom').map(site => <button
+        type="button" key={site.id} aria-pressed={selected.id === site.id}
+        onClick={() => onSelect(site)}>
+        <span className="map-choice-pin" aria-hidden="true">●</span>
+        <span><strong>{site.name}</strong><small>{coordinate(site.latitude)} / {coordinate(site.longitude)}</small></span>
+        <small>{selected.id === site.id ? 'Selected' : 'Select'}</small>
+      </button>)}
+    </div>
     <div className="map-selection-summary" aria-live="polite">
       <div><strong>{selected.name}</strong><p>{coordinate(request.latitude)} latitude · {coordinate(request.longitude)} east longitude</p></div>
       <div><span>{terrainStatus}</span><a href="#/coverage">Explore Site04 terrain</a></div>
