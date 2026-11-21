@@ -147,6 +147,39 @@ input[type=number], input[type=date] { font-family: var(--mono); }
 .map-reticle { position: absolute; right: 15px; bottom: 13px; color: #7c9fbd; font: 6px var(--mono); display: flex; gap: 5px; align-items: center; }
 .map-bottom { padding: 10px 13px; font-size: 8px; color: #8eabc5; border-top: 1px solid #203e59; }
 .map-bottom > span:first-child { display: flex; align-items: center; gap: 6px; }
+.map-site-choices { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; padding: 10px 12px; border-top: 1px solid #203e59; background: #07121e; }
+.map-site-choices button { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 8px 9px; border: 1px solid #29495c; border-radius: 4px; background: #0a1b29; color: #b9d5e7; text-align: left; cursor: pointer; }
+.map-site-choices button[aria-pressed="true"] { border-color: #e5b75e; background: #182433; box-shadow: inset 2px 0 #e5b75e; color: #fff; }
+.map-choice-pin { color: #65bde8; font-size: 13px; }
+.map-site-choices button[aria-pressed="true"] .map-choice-pin { color: #e5b75e; }
+.map-site-choices button > span:nth-child(2) { display: grid; gap: 3px; min-width: 0; flex: 1; }
+.map-site-choices strong { font-size: 10px; }
+.map-site-choices small { color: #8eaaba; font-size: 8px; }
+.map-site-choices button:focus-visible { outline: 2px solid #8cddff; outline-offset: 2px; }
+.planning-workspace .map-site-choices { background: #08111c; }
+.planning-workspace .map-site-choices button { min-height: 54px; }
+.preset-geometry-graphs > .section-heading { align-items: flex-start; }
+.preset-geometry-graphs > .section-heading h2 { margin: 0; }
+.preset-geometry-graphs > .section-heading p { margin: 5px 0 0; color: #99b4c4; font-size: 11px; }
+.preset-geometry-list { display: grid; gap: 10px; margin-top: 14px; }
+.preset-geometry-card { min-width: 0; border: 1px solid #29495c; border-radius: 5px; background: #071522; }
+.preset-geometry-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; }
+.preset-geometry-card-heading h3 { margin: 0; color: #dcecf5; font-size: 12px; }
+.preset-geometry-card-heading p { margin: 4px 0 0; color: #91acbd; font-size: 10px; }
+.preset-geometry-terrain-note { margin: 0; padding: 0 12px 10px; color: #91acbd; font-size: 9px; line-height: 1.5; }
+.preset-geometry-card-heading button, .preset-geometry-card-body button { flex: 0 0 auto; border: 1px solid #3c718e; border-radius: 4px; padding: 7px 10px; background: #0b2232; color: #cce9f5; cursor: pointer; font-size: 10px; }
+.preset-geometry-card-heading button:hover, .preset-geometry-card-body button:hover { background: #12344a; }
+.preset-geometry-card-body { border-top: 1px solid #213b4c; padding: 10px; }
+.preset-geometry-card-body > p { color: #b5c9d6; font-size: 11px; }
+.preset-geometry-card-body .geometry-series { margin: 0; border: 0; padding: 0; background: transparent; box-shadow: none; }
+.preset-geometry-card-body .geometry-series::before { content: none; }
+.preset-geometry-card-body .geometry-series h2 { display: none; }
+.preset-geometry-card-body .elevation-plot svg { cursor: crosshair; }
+@media (max-width: 560px) {
+  .preset-geometry-card-heading { align-items: flex-start; flex-direction: column; }
+  .preset-geometry-card-heading button { width: 100%; }
+  .map-site-choices { grid-template-columns: 1fr; }
+}
 .legend-dot { width: 5px; height: 5px; border-radius: 50%; display: inline-block; background: #62baff; flex-shrink: 0; }
 .green-dot { background: var(--green); }
 

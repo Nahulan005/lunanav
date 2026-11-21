@@ -258,7 +258,7 @@ export async function fetchSite04CoverageResult(): Promise<{ data: Site04Coverag
   try {
     const data = await requestJson(SITE04_COVERAGE_ENDPOINT)
     if (!isSite04CoverageResponse(data)) return { data: null, error: 'Invalid response: Site04 coverage payload did not match the supported contract.' }
-    return { data, error: data.status === 'unavailable' ? `Data unavailable: ${data.detail}` : null }
+    return { data, error: null }
   } catch (error) { return { data: null, error: errorMessage(error) } }
 }
 export async function fetchSite04Coverage(): Promise<Site04CoverageResponse | null> {

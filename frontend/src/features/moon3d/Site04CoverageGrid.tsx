@@ -18,11 +18,12 @@ export function Site04CoverageGrid({ data, loading, error, onRetry }: { data: Si
   const number = (value: number | null | undefined) => value == null ? 'Unavailable' : String(value)
   return <section className="site04-grid-panel" aria-labelledby={`${id}-title`} aria-busy={loading}>
     <div className="site04-grid-heading"><h3 id={`${id}-title`}>Site04 observation coverage</h3><span role="status">API status: {loading ? 'loading' : data?.status ?? 'unavailable'}</span></div>
-    <p>Separate projected X/Y view. No latitude/longitude transformation is verified, so these cells are never placed on the Moon globe. This is observation coverage only, not landing suitability or risk.</p>
-    {data && <p>{data.detail}</p>}
-    {error && !loading && <p role="status">{error}</p>}
-    {onRetry && <button type="button" className="moon3d-mode-button" onClick={onRetry} disabled={loading}>{loading ? 'Requesting coverage…' : 'Retry coverage request'}</button>}
-    {!drawable && <p className="site04-empty">{loading ? 'Requesting the bounded coverage window.' : !data ? 'Coverage API unavailable or response invalid. No demo substitute.' : 'No observation cells available to display. No demo substitute.'}</p>}
+    <p>Where NASA’s LOLA instrument recorded returns in the 160 m centre patch.</p>
+    {!drawable && <p className="site04-empty" role="status">{loading ? 'Requesting observation counts…'
+      : error ?? (data?.detail.includes('ingestion is not enabled')
+        ? 'The connected backend is serving the original empty coverage response. It needs a newer deployment.'
+        : data?.detail ?? 'No observation counts were returned.')}</p>}
+    {onRetry && !drawable && <button type="button" className="moon3d-mode-button" onClick={onRetry} disabled={loading}>Retry coverage request</button>}
     {drawable && <div className="site04-grid-layout">
       <figure>
         <svg viewBox="0 0 360 360" role="group" aria-labelledby={`${id}-plot-title ${id}-plot-desc`}>

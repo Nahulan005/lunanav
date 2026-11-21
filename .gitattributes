@@ -1,0 +1,3 @@
+# The Site04 providers pin the SHA-256 of these exact JSON bytes.
+backend/data/processed/site04_coverage_window.json text eol=lf
+backend/data/processed/site04_terrain_window.json text eol=lf

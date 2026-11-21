@@ -126,3 +126,11 @@ footer { margin-top: 25px; opacity: .8; }
   .schedule-samples { padding: 16px; }.schedule-empty { min-height: 230px; padding: 18px; }.mission-home .eyebrow { font-size: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+.map-selection-summary { padding: 14px; border-top: 1px solid #203e59; display: flex; flex-wrap: wrap; gap: 10px 22px; justify-content: space-between; }
+.map-selection-summary p, .map-selection-summary span { color: #a9c4d3; }
+.map-selection-summary a { display: block; color: #a8ede6; text-decoration: underline; }
+.site-marker { cursor: pointer; }
+.site-marker:focus-visible { outline: 2px solid #a8ede6; outline-offset: 2px; border-radius: 5px; }
+.analysis-finding { font-size: 1.05rem; line-height: 1.65; max-width: 76ch; margin-block: 12px; }
+.derivation-provenance summary { font-size: .9rem; color: #a8ede6; }

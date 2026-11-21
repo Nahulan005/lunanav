@@ -6,6 +6,8 @@ export const landingSites: LandingSite[] = [
   { id: 'shackleton', name: 'Shackleton Rim', region: 'Lunar south pole', latitude: -89.9, longitude: 0, description: 'Explore a south-polar landing concept at the rim of Shackleton Crater. This illustrative scenario prioritizes extended illumination windows.', position: [49, 84] },
   { id: 'apollo17', name: 'Apollo 17 Site', region: 'Taurus–Littrow valley', latitude: 20.19, longitude: 30.77, description: 'Revisit the Taurus–Littrow region with a sample mission scenario inspired by lunar exploration heritage.', position: [68, 35] },
   { id: 'clavius', name: 'Clavius Crater', region: 'Southern highlands', latitude: -58.4, longitude: -14.4, description: 'Explore a southern highlands landing concept with an illustrative balance of terrain and communication constraints.', position: [40, 68] },
+  { id: 'apollo11', name: 'Tranquility Base', region: 'Mare Tranquillitatis', latitude: 0.67, longitude: 23.47, description: 'Apollo 11 landing-site coordinates for location-specific Sun/Earth geometry. Local terrain data availability is separate.', position: [54, 46] },
+  { id: 'change5', name: 'Mons Rümker / Chang’e 5', region: 'Oceanus Procellarum', latitude: 43.06, longitude: -51.92, description: 'Chang’e 5 sample-return region coordinates for location-specific Sun/Earth geometry. Local terrain data availability is separate.', position: [38, 31] },
   { id: 'custom', name: 'Custom Location', region: 'User-defined coordinates', latitude: 0, longitude: 0, description: 'Define your own landing coordinates. Custom locations use a fixed sample dataset; estimates are not calculated from coordinates or dates.', position: [50, 50] },
 ]
 // Fictional presentation fixtures. These are not lunar calculations.
