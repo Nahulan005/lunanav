@@ -1,0 +1,16 @@
+.mission-schedule-tables { padding: clamp(16px, 3vw, 28px); }
+.mission-schedule-tables header { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+.mission-schedule-tables p { margin: 8px 0 14px; color: #abc2d0; font-size: .85rem; line-height: 1.6; }
+.mission-schedule-tables label { display: grid; gap: 5px; }
+.mission-schedule-tables details { margin-block-start: 18px; }
+.mission-schedule-tables summary { cursor: pointer; color: #b9edfa; }
+.mission-table-scroll { overflow: auto; border: 1px solid #304959; border-radius: 6px; }
+.mission-table-samples { max-height: 24rem; margin-block-start: 10px; }
+.mission-table-scroll table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: .85rem; }
+.mission-table-scroll caption { text-align: left; padding: 9px 12px; color: #abc2d0; }
+.mission-table-scroll th, .mission-table-scroll td { text-align: left; white-space: nowrap; padding: 10px 12px; border-top: 1px solid #263e4d; }
+.mission-table-scroll th { background: #132737; color: #cbe8f4; }
+.mission-table-samples th { position: sticky; top: 0; }
+.mission-table-scroll [data-horizon] { color: #a9becb; }
+.mission-table-scroll [data-horizon="Above"] { color: #8be3bd; }
+.mission-table-scroll [data-horizon="At horizon"] { color: #ffcf8c; }

@@ -1,4 +1,5 @@
 import type { AnalysisRequest } from '../data/mockData'
+import { API_BASE_URL } from './apiConfig'
 
 // Mirrors lunanav-science/backend/app/schemas/geometry.py.
 export interface TargetDirection {
@@ -40,8 +41,7 @@ export interface SunEarthGeometryResponse {
   detail: string | null
 }
 
-const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
-export const geometryConfigured = Boolean(configuredBaseUrl)
+export const geometryConfigured = Boolean(API_BASE_URL)
 
 const object = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -84,12 +84,11 @@ function geometryResponse(value: unknown): value is SunEarthGeometryResponse {
 }
 
 export async function fetchSunEarthGeometry(request: AnalysisRequest, signal: AbortSignal): Promise<SunEarthGeometryResponse | null> {
-  if (!configuredBaseUrl) return null
   const params = new URLSearchParams({
     latitude: String(request.latitude), longitude: String(request.longitude),
     landingDate: request.landingDate, siteId: request.siteId,
   })
-  const response = await fetch(`${configuredBaseUrl.replace(/\/+$/, '')}/api/v1/geometry/sun-earth?${params}`, { signal })
+  const response = await fetch(`${API_BASE_URL}/api/v1/geometry/sun-earth?${params}`, { signal })
   if (!response.ok) throw new Error(`Geometry unavailable (HTTP ${response.status}).`)
   const data: unknown = await response.json()
   if (!geometryResponse(data)) throw new Error('Geometry response could not be verified.')

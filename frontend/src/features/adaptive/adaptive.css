@@ -12,3 +12,24 @@
 .adaptive-dialog { width:min(92vw,480px); color:#e1edf5; background:#0c1d2b; border:1px solid #5c829b; border-radius:12px; padding:25px; }.adaptive-dialog::backdrop { background:#010813ce; backdrop-filter:blur(5px); }.adaptive-dialog p { font-size:13px; line-height:1.8; }.adaptive-dialog h2 { font-size:21px; }
 @media(max-width:1000px){.adaptive-workspace{grid-template-columns:1fr}.adaptive-viewport{min-height:600px}.adaptive-console{padding:18px}}
 @media(max-width:600px){.adaptive-page{padding:16px}.adaptive-title{align-items:flex-start;flex-direction:column}.adaptive-title h1{font-size:25px}.adaptive-viewport{min-height:550px}.adaptive-zone{min-width:70px;padding:3px}.adaptive-zone>span{width:38px;height:38px;font-size:18px}.adaptive-zone strong{font-size:9px}.adaptive-hud-top{font-size:9px;inset:16px 12px auto}.adaptive-event{left:10px;right:10px;padding:10px;bottom:72px}.adaptive-pitch{right:10px}.adaptive-sight{top:33%}}
+
+.adaptive-moon-container {
+  position: absolute;
+  width: max(86%, 340px);
+  aspect-ratio: 1;
+  left: 50%;
+  top: 12%;
+  transform: translateX(calc(-50% + var(--moon-pan))) scale(var(--moon-scale));
+  transform-origin: 50% 38%;
+  pointer-events: none;
+}
+.adaptive-moon-container .adaptive-moon {
+  width: 88%;
+  left: 6%;
+  top: 6%;
+  transform: none;
+}
+.adaptive-event-plan { margin-block: 16px; }
+.adaptive-event-plan td:last-child { white-space: normal; }
+.adaptive-event-plan [aria-current="step"], .landing-phase-table [aria-current="step"] { background: #102e3b; color: #a4eeff; }
+@media (max-width: 600px) { .adaptive-moon-container { top: 23%; } }

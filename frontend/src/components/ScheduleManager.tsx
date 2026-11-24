@@ -2,6 +2,7 @@
 import { Clock3, MapPin } from 'lucide-react'
 import type { AnalysisRequest } from '../data/mockData'
 import { SunEarthGeometryPanel, type GeometryPanelState } from './SunEarthGeometryPanel'
+import { ScheduleTables } from './ScheduleTables'
 import { GeometryTimeline } from './GeometryTimeline'
 
 interface ScheduleManagerProps {
@@ -50,6 +51,8 @@ export function ScheduleManager({
       </section>
 
       <SunEarthGeometryPanel key={JSON.stringify(request)} request={request} onStateChange={onGeometryState} initialState={geometry} />
+      {geometry?.response?.status === 'available' && !geometry.loading && geometry.response.live_request_executed
+        && <ScheduleTables key={geometry.requestKey} response={geometry.response} />}
       <GeometryTimeline key={JSON.stringify(request)} geometry={geometry} />
 
       <section className="panel schedule-window-status">
