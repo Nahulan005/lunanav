@@ -313,7 +313,8 @@ function App() {
     </main>}
     {showAdaptive && <AdaptiveSimulation siteName={selected.name} date={request.landingDate} />}
     {showLandingDemo && <main id="landing-demo" tabIndex={-1}>
-      <LandingVisualization />
+      <LandingVisualization key={JSON.stringify(request)} request={request} siteName={selected.name}
+        pointTerrain={terrainSample} geometry={currentGeometry} onGeometryState={setGeometryState} />
     </main>}
     {showMoon3D && <main id="landing-3d" tabIndex={-1}>
       <div className="page-heading">

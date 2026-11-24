@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Play,
   Pause,
@@ -9,7 +9,6 @@ import {
   Globe,
   Activity,
 
-  Layers,
   AlertTriangle,
   Rocket,
 
@@ -18,191 +17,95 @@ import {
 
   Crosshair,
 } from 'lucide-react';
+import type { AnalysisRequest } from '../../data/mockData'
+import { SunEarthGeometryPanel, type GeometryPanelState } from '../../components/SunEarthGeometryPanel'
+import type { TerrainSample } from '../../services/analysis'
+import { containsSite04Point, site04ToProjected } from '../../services/site04Terrain'
+import { useSite04Footprint, useSite04Terrain } from '../../services/useSite04Terrain'
 import { landingMockData } from './landingMockData';
 import './LandingVisualization.css';
 
 type DescentStatus = 'idle' | 'descending' | 'paused' | 'landed';
 
-export const LandingVisualization: React.FC = () => {
-  const [status, setStatus] = useState<DescentStatus>('idle');
-  const [progress, setProgress] = useState<number>(0);
-  const [altitude, setAltitude] = useState<number>(landingMockData.descent.initialAltitude);
-  const [verticalSpeed, setVerticalSpeed] = useState<number>(0);
-  const [elapsedTime, setElapsedTime] = useState<number>(0);
-  const [currentPhase, setCurrentPhase] = useState<string>('Approach Orbit Ready');
+interface LandingProps {
+  request: AnalysisRequest
+  siteName: string
+  pointTerrain: TerrainSample | null
+  geometry: GeometryPanelState | null
+  onGeometryState: (state: GeometryPanelState) => void
+}
 
-  // Animation frame and timing refs
-  const animationFrameRef = useRef<number | null>(null);
-  const lastTimeRef = useRef<number | null>(null);
-  const progressRef = useRef<number>(0);
-  const statusRef = useRef<DescentStatus>('idle');
+const missionDuration = 60
+const playbackDuration = 30_000
+const initialAltitude = landingMockData.descent.initialAltitude
+const phases = landingMockData.telemetrySteps
+const altitudeAt = (fraction: number) => initialAltitude * (1 - fraction) ** 2
+const sceneHeight = (altitude: number) => 72 - altitude / initialAltitude * 60
+const sceneX = (fraction: number) => 50 - 17 * (1 - Math.min(1, fraction / .82)) ** 2
+const trajectory = Array.from({ length: 33 }, (_, index) => {
+  const fraction = index / 32
+  return `${index === 0 ? 'M' : 'L'} ${sceneX(fraction)} ${sceneHeight(altitudeAt(fraction))}`
+}).join(' ')
 
-  // Keep refs synchronized with state to prevent stale closures
+export function LandingVisualization({ request, siteName, pointTerrain, geometry, onGeometryState }: LandingProps) {
+  const [status, setStatus] = useState<DescentStatus>('idle')
+  const [progress, setProgress] = useState(0)
+  const progressRef = useRef(0)
+  const [sampleIndex, setSampleIndex] = useState(0)
+  const samples = !geometry?.loading && geometry?.response?.status === 'available' && geometry.response.live_request_executed
+    ? geometry.response.observations : []
+  const sample = samples[Math.min(sampleIndex, samples.length - 1)]
+  const bearing = (target: 'sun' | 'earth') => sample
+    ? `${sample[target].azimuth_deg.toFixed(1)}° az / ${sample[target].elevation_deg.toFixed(1)}° el`
+    : geometry?.loading ? 'Loading…' : 'Unavailable'
+
+  const southPolar = request.latitude <= -89
+  const footprint = useSite04Footprint(southPolar)
+  const xy = southPolar ? site04ToProjected(request) : null
+  const insideSite04 = Boolean(xy && footprint.data && containsSite04Point(footprint.data.projected_bounds, xy))
+  const centre = useSite04Terrain(insideSite04, null)
+  const centreCell = xy && centre.data?.cells.find(cell => containsSite04Point(cell.bounds, xy))
+  const regional = useSite04Terrain(insideSite04 && !centre.loading && !centreCell, request)
+  const terrainCell = centreCell || (xy && regional.data?.cells.find(cell => containsSite04Point(cell.bounds, xy)))
+  const siteElevation = terrainCell?.elevation.status === 'available' ? terrainCell.elevation.value : null
+  const terrainLoading = footprint.loading || centre.loading || regional.loading
+  const coordinates = `${Math.abs(request.latitude).toFixed(2)}° ${request.latitude < 0 ? 'S' : 'N'}, ${Math.abs(request.longitude).toFixed(2)}° ${request.longitude < 0 ? 'W' : 'E'}`
+  const sampleTime = sample ? `${new Date(sample.timestamp_utc).toISOString().slice(11, 16)} UTC` : 'Geometric direction'
+
   useEffect(() => {
-    progressRef.current = progress;
-  }, [progress]);
-
-  useEffect(() => {
-    statusRef.current = status;
-  }, [status]);
-
-  // Determine current telemetry descent phase descriptor
-  const getPhaseData = useCallback((currentProg: number) => {
-    const phases = landingMockData.telemetrySteps;
-    for (let i = phases.length - 1; i >= 0; i--) {
-      if (currentProg >= phases[i].threshold) {
-        return phases[i];
-      }
+    if (status !== 'descending') return
+    let previous: number | undefined
+    let frame: number
+    const tick = (now: number) => {
+      if (previous !== undefined) progressRef.current = Math.min(100, progressRef.current + Math.min(100, now - previous) / playbackDuration * 100)
+      previous = now
+      setProgress(progressRef.current)
+      if (progressRef.current >= 100) setStatus('landed')
+      else frame = requestAnimationFrame(tick)
     }
-    return phases[0];
-  }, []);
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [status])
 
-  // Main animation step function
-  const step = useCallback(
-    function animateStep(timestamp: number) {
-      if (statusRef.current !== 'descending') {
-        animationFrameRef.current = null;
-        lastTimeRef.current = null;
-        return;
-      }
+  function seek(value: number) {
+    progressRef.current = value
+    setProgress(value)
+    setStatus(value >= 100 ? 'landed' : value === 0 ? 'idle' : 'paused')
+  }
+  function handleStart() {
+    if (status === 'landed') seek(0)
+    setStatus('descending')
+  }
 
-      if (lastTimeRef.current === null) {
-        lastTimeRef.current = timestamp;
-      }
-
-      const deltaTime = timestamp - lastTimeRef.current;
-      lastTimeRef.current = timestamp;
-
-      const duration = landingMockData.descent.descentDuration;
-      const progressDelta = (deltaTime / duration) * 100;
-      const nextProgress = Math.min(100, progressRef.current + progressDelta);
-
-      progressRef.current = nextProgress;
-      setProgress(nextProgress);
-
-      // Illustrative altitude calculation
-      const initialAlt = landingMockData.descent.initialAltitude;
-      const nextAltitude = Math.max(0, Math.round(initialAlt * (1 - nextProgress / 100)));
-      setAltitude(nextAltitude);
-
-      // Elapsed time
-      setElapsedTime((prev) => +(prev + deltaTime / 1000).toFixed(1));
-
-      // Illustrative vertical speed calculation based on descent progress
-      if (nextProgress >= 100) {
-        setVerticalSpeed(0);
-        setCurrentPhase('Touchdown Confirmed');
-        setStatus('landed');
-        animationFrameRef.current = null;
-        lastTimeRef.current = null;
-        return;
-      } else {
-        const phaseInfo = getPhaseData(nextProgress);
-        setCurrentPhase(phaseInfo.phase);
-
-        // Illustrative velocity profile: deceleration curve
-        let mockSpeed: number;
-        if (nextProgress < 30) {
-          mockSpeed = -35.0 + (nextProgress / 30) * 10;
-        } else if (nextProgress < 70) {
-          mockSpeed = -25.0 + ((nextProgress - 30) / 40) * 12;
-        } else if (nextProgress < 90) {
-          mockSpeed = -13.0 + ((nextProgress - 70) / 20) * 8;
-        } else {
-          mockSpeed = -5.0 + ((nextProgress - 90) / 10) * 3.8;
-        }
-        setVerticalSpeed(parseFloat(mockSpeed.toFixed(1)));
-      }
-
-      // Schedule next frame
-      animationFrameRef.current = requestAnimationFrame(animateStep);
-    },
-    [getPhaseData]
-  );
-
-  // Start / Resume descent handler
-  const handleStart = () => {
-    // If completed or already landing, handle accordingly
-    if (status === 'landed') {
-      // Auto reset before re-running
-      handleReset();
-      setTimeout(() => {
-        setStatus('descending');
-      }, 50);
-      return;
-    }
-
-    if (status === 'descending') return; // Prevent multiple loops
-
-    // Clean up any existing frame to prevent duplicate loops
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-
-    lastTimeRef.current = null;
-    setStatus('descending');
-  };
-
-  // Pause descent handler
-  const handlePause = () => {
-    if (status !== 'descending') return;
-
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    lastTimeRef.current = null;
-    setStatus('paused');
-  };
-
-  // Reset descent handler
-  const handleReset = () => {
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    lastTimeRef.current = null;
-    progressRef.current = 0;
-    setProgress(0);
-    setAltitude(landingMockData.descent.initialAltitude);
-    setVerticalSpeed(0);
-    setElapsedTime(0);
-    setCurrentPhase('Approach Orbit Ready');
-    setStatus('idle');
-  };
-
-  // Trigger animation loop when status becomes descending
-  useEffect(() => {
-    if (status === 'descending') {
-      if (animationFrameRef.current === null) {
-        animationFrameRef.current = requestAnimationFrame(step);
-      }
-    }
-
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-    };
-  }, [status, step]);
-
-  // Clean up on component unmount
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-    };
-  }, []);
-
-  // Compute lander vertical position style percentage
-  // Progress 0% -> top: 12% (high altitude), Progress 100% -> top: 72% (touchdown on landing target)
-  const landerTop = 12 + (progress / 100) * 60;
-  // Subtle scaling effect to simulate approaching perspective (0.75x at high alt to 1.0x at surface)
-  const landerScale = 0.75 + (progress / 100) * 0.25;
+  const fraction = progress / 100
+  const altitude = Math.round(altitudeAt(fraction))
+  const verticalSpeed = status === 'idle' ? 0 : -2 * initialAltitude * (1 - fraction) / missionDuration
+  const elapsedTime = missionDuration * fraction
+  const phase = phases.findLast(phase => progress >= phase.threshold) ?? phases[0]
+  const currentPhase = status === 'idle' ? 'Approach ready' : phase.phase
+  const heightFraction = altitude / initialAltitude
+  const landerTop = sceneHeight(altitudeAt(fraction))
+  const landerScale = 1 - heightFraction * 0.25
 
   return (
     <div className="luna-landing-container" role="region" aria-label="Lunar Landing Visualization">
@@ -217,7 +120,7 @@ export const LandingVisualization: React.FC = () => {
               <span className="eyebrow-accent" />
               NASA SPACE APPS CHALLENGE / TERMINAL DESCENT SUITE
             </div>
-            <h1 className="luna-title">Shackleton Rim Landing Visualization</h1>
+            <h1 className="luna-title">{siteName} · Landing Demo</h1>
           </div>
         </div>
 
@@ -247,7 +150,7 @@ export const LandingVisualization: React.FC = () => {
 
           <div className="mission-clock">
             <span className="clock-label">T+ DESCENT TIME</span>
-            <span className="clock-value">00:{elapsedTime.toFixed(0).padStart(2, '0')}s</span>
+            <span className="clock-value">{elapsedTime.toFixed(1)} s</span>
           </div>
         </div>
       </header>
@@ -256,10 +159,9 @@ export const LandingVisualization: React.FC = () => {
       <div className="luna-disclaimer-banner" role="alert">
         <AlertTriangle size={18} className="disclaimer-icon" />
         <div className="disclaimer-content">
-          <strong>Illustrative visualization. This is not a flight-dynamics simulation.</strong>
+          <strong>Scripted descent with live mission context.</strong>
           <span className="disclaimer-sub">
-            All telemetry, coordinates, terrain, and Sun/Earth indicators are illustrative mock values.
-            No real communications availability, guidance, or landing safety is assessed.
+            Site coordinates, Horizons readings and available LOLA elevations are shown as context. The flight path, altitude above the demo surface, and terrain artwork are illustrative.
           </span>
         </div>
       </div>
@@ -276,68 +178,43 @@ export const LandingVisualization: React.FC = () => {
           {/* Celestial Direction Indicators */}
           <div className="celestial-hud">
             {/* Earth Indicator */}
-            <div className="celestial-card earth-card" title={landingMockData.environment.earthStatus}>
+            <div className="celestial-card earth-card">
               <div className="celestial-icon-wrap earth-orb">
                 <Globe size={18} className="earth-svg" />
                 <span className="celestial-ping earth-ping" />
               </div>
               <div className="celestial-data">
-                <span className="celestial-title">EARTH DIRECTION (MOCK)</span>
-                <span className="celestial-bearing">{landingMockData.environment.earthBearing}</span>
-                <span className="celestial-status">MOCK INDICATOR — RF LINK NOT ASSESSED</span>
+                <span className="celestial-title">EARTH · JPL HORIZONS</span>
+                <span className="celestial-bearing">{bearing('earth')}</span>
+                <span className="celestial-status">{sampleTime}</span>
               </div>
             </div>
 
             {/* Sun Indicator */}
-            <div className="celestial-card sun-card" title={landingMockData.environment.sunStatus}>
+            <div className="celestial-card sun-card">
               <div className="celestial-icon-wrap sun-orb">
                 <Sun size={18} className="sun-svg" />
                 <span className="celestial-ping sun-ping" />
               </div>
               <div className="celestial-data">
-                <span className="celestial-title">SUN DIRECTION (MOCK)</span>
-                <span className="celestial-bearing">{landingMockData.environment.sunBearing}</span>
-                <span className="celestial-status">GRAZING POLAR ILLUMINATION</span>
+                <span className="celestial-title">SUN · JPL HORIZONS</span>
+                <span className="celestial-bearing">{bearing('sun')}</span>
+                <span className="celestial-status">{sampleTime}</span>
               </div>
             </div>
           </div>
 
           {/* Altitude Radar Guide Marks (HUD overlay) */}
           <div className="altitude-tape-overlay">
-            <div className="altitude-mark mark-1200">
-              <span className="mark-line" />
-              <span className="mark-label">1200 m (High Gate)</span>
-            </div>
-            <div className="altitude-mark mark-800">
-              <span className="mark-line" />
-              <span className="mark-label">800 m (Pitch-Up)</span>
-            </div>
-            <div className="altitude-mark mark-400">
-              <span className="mark-line" />
-              <span className="mark-label">400 m (Terminal Gate)</span>
-            </div>
-            <div className="altitude-mark mark-100">
-              <span className="mark-line" />
-              <span className="mark-label">100 m (Vertical Descent)</span>
-            </div>
-            <div className="altitude-mark mark-0">
-              <span className="mark-line" />
-              <span className="mark-label">0 m (Touchdown)</span>
-            </div>
+            {[1200, 800, 400, 100, 0].map(height => <div key={height} className="altitude-mark" style={{ top: `${sceneHeight(height)}%` }}>
+              <span className="mark-line" /><span className="mark-label">{height} m</span>
+            </div>)}
           </div>
 
           {/* Descent Trajectory Vector Guideline */}
           <div className="trajectory-line-wrapper">
             <svg className="trajectory-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <line
-                x1="50"
-                y1="12"
-                x2="50"
-                y2="75"
-                stroke="rgba(90, 201, 237, 0.28)"
-                strokeWidth="0.8"
-                strokeDasharray="2, 2"
-              />
+              <path d={trajectory} fill="none" stroke="rgba(90, 201, 237, 0.42)" strokeWidth="0.55" strokeDasharray="1.5 1.3" />
             </svg>
           </div>
 
@@ -348,6 +225,7 @@ export const LandingVisualization: React.FC = () => {
             }`}
             style={{
               top: `${landerTop}%`,
+              left: `${sceneX(fraction)}%`,
               transform: `translate(-50%, -50%) scale(${landerScale})`,
             }}
             aria-label={`Lunar Lander at ${altitude} meters altitude`}
@@ -481,7 +359,7 @@ export const LandingVisualization: React.FC = () => {
                       width: `${crater.size}px`,
                       height: `${crater.size * 0.42}px`,
 }}
-                    title={`${crater.name} (Illustrative)`}
+                    title="Illustrative crater"
                   >
                     <div className="crater-rim" />
                     <div className="crater-floor" />
@@ -501,8 +379,8 @@ export const LandingVisualization: React.FC = () => {
                 </div>
                 <div className="target-callout">
                   <span className="target-title">{landingMockData.terrain.target.label}</span>
-                  <span className="target-site-code">{landingMockData.terrain.target.subLabel}</span>
-                  <span className="target-coord-tag">{landingMockData.terrain.target.coordinatesText}</span>
+                  <span className="target-site-code">{siteName}</span>
+                  <span className="target-coord-tag">{coordinates}</span>
                 </div>
               </div>
             </div>
@@ -526,21 +404,21 @@ export const LandingVisualization: React.FC = () => {
             {/* Required Value: Selected Site */}
             <div className="telemetry-card highlight-card">
               <span className="metric-eyebrow">SELECTED SITE</span>
-              <span className="metric-value site-name">{landingMockData.siteName}</span>
-              <span className="metric-caption">Lunar South Pole Peak</span>
+              <span className="metric-value site-name">{siteName}</span>
+              <span className="metric-caption">{request.landingDate} UTC</span>
             </div>
 
             {/* Required Value: Coordinates */}
             <div className="telemetry-card">
-              <span className="metric-eyebrow">TARGET COORDINATES (MOCK)</span>
+              <span className="metric-eyebrow">SELECTED COORDINATES</span>
               <div className="coords-readout">
                 <div>
                   <span className="coord-axis">Latitude:</span>
-                  <span className="coord-val">{landingMockData.coordinates.latitude}°</span>
+                  <span className="coord-val">{request.latitude}°</span>
                 </div>
                 <div>
                   <span className="coord-axis">Longitude:</span>
-                  <span className="coord-val">{landingMockData.coordinates.longitude}°</span>
+                  <span className="coord-val">{request.longitude}°</span>
                 </div>
               </div>
               <span className="metric-caption">Selenographic System</span>
@@ -555,9 +433,9 @@ export const LandingVisualization: React.FC = () => {
 
             {/* Required Value: Terrain Source */}
             <div className="telemetry-card">
-              <span className="metric-eyebrow">TERRAIN SOURCE</span>
-              <span className="metric-value terrain-val">{landingMockData.terrainSource}</span>
-              <span className="metric-caption">Illustrative CSS terrain — no LOLA data used here</span>
+              <span className="metric-eyebrow">LOLA ELEVATION CONTEXT</span>
+              <span className="metric-value terrain-val">{siteElevation != null ? `${siteElevation.toFixed(1)} m` : pointTerrain ? `${pointTerrain.elevation_value.toFixed(1)} m` : terrainLoading ? 'Checking coverage…' : 'Unavailable'}</span>
+              <span className="metric-caption">{siteElevation != null ? 'Site04 · provisional surface product' : pointTerrain ? 'LDEM_4 · coarse containing-cell sample' : 'No matching point sample returned.'}</span>
             </div>
           </div>
 
@@ -645,7 +523,7 @@ export const LandingVisualization: React.FC = () => {
             <button
               type="button"
               className="control-btn btn-pause"
-              onClick={handlePause}
+              onClick={() => setStatus('paused')}
               disabled={status !== 'descending'}
               aria-label="Pause descent sequence"
             >
@@ -657,7 +535,7 @@ export const LandingVisualization: React.FC = () => {
             <button
               type="button"
               className="control-btn btn-reset"
-              onClick={handleReset}
+              onClick={() => seek(0)}
               aria-label="Reset landing visualization to initial altitude"
             >
               <RotateCcw size={18} />
@@ -665,28 +543,32 @@ export const LandingVisualization: React.FC = () => {
             </button>
           </div>
 
-          <div className="control-briefing">
-            <div className="briefing-item">
-              <Layers size={14} className="brief-icon" />
-              <p>
-                <strong>Start initiates</strong> smooth illustrative descent sequence with dynamic altitude tracking.
-              </p>
-            </div>
-            <div className="briefing-item">
-              <Pause size={14} className="brief-icon" />
-              <p>
-                <strong>Pause freezes</strong> current descent progress, altitude, and trajectory in place.
-              </p>
-            </div>
-            <div className="briefing-item">
-              <RotateCcw size={14} className="brief-icon" />
-              <p>
-                <strong>Reset returns</strong> lander to initial {landingMockData.descent.initialAltitude} m altitude.
-              </p>
-            </div>
-          </div>
+          <label className="landing-scrub">Replay position · {elapsedTime.toFixed(1)} s
+            <input type="range" min={0} max={100} step={0.1} value={progress} onChange={event => seek(event.target.valueAsNumber)} />
+          </label>
+          <p className="landing-context-note">30 seconds of playback represents a 60-second demo descent.</p>
         </section>
       </div>
+      <section className="panel mission-schedule-tables landing-phase-table">
+        <header><div><h2>Descent phase schedule</h2><p>Simulated mission elapsed time</p></div><a href="#/schedule">Open UTC geometry schedule</a></header>
+        <div className="mission-table-scroll" tabIndex={0} aria-label="Descent phase schedule">
+          <table><caption>Demo phase starts</caption><thead><tr><th scope="col">Phase</th><th scope="col">T+</th><th scope="col">Altitude</th><th scope="col">Replay</th></tr></thead>
+            <tbody>{phases.map(row => <tr key={row.threshold} aria-current={row === phase && status !== 'idle' ? 'step' : undefined}>
+              <th scope="row">{row.phase}</th><td>{(row.threshold / 100 * missionDuration).toFixed(1)} s</td><td>{altitudeAt(row.threshold / 100).toFixed(1)} m</td>
+              <td><button type="button" className="moon3d-mode-button" onClick={() => seek(row.threshold)}>Jump</button></td>
+            </tr>)}</tbody>
+          </table>
+        </div>
+      </section>
+      <section className="landing-provider-context">
+        <p className="landing-context-note">The HUD follows the selected UTC sample. Readings below show the first returned observation.</p>
+        <label>HUD geometry sample
+          <select disabled={!samples.length} value={samples.length ? Math.min(sampleIndex, samples.length - 1) : 0} onChange={event => setSampleIndex(Number(event.target.value))}>
+            {samples.length ? samples.map((reading, index) => <option key={reading.timestamp_utc} value={index}>{new Date(reading.timestamp_utc).toISOString().slice(0, 16).replace('T', ' ')} UTC</option>) : <option value={0}>No returned geometry</option>}
+          </select>
+        </label>
+        <SunEarthGeometryPanel request={request} onStateChange={onGeometryState} initialState={geometry} />
+      </section>
     </div>
   );
 };

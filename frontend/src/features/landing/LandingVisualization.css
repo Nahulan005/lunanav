@@ -1302,3 +1302,23 @@
     display: none; /* Keep target visual clean on tiny screens */
   }
 }
+
+.landing-provider-context { display: grid; gap: 12px; }
+.landing-provider-context > label, .landing-scrub {
+  display: grid;
+  gap: 8px;
+  margin-block: 12px;
+  color: #b3d3e5;
+}
+.landing-provider-context select {
+  width: min(100%, 24rem);
+  color: #dbedf8;
+  background: #102234;
+  padding: 8px;
+  border: 1px solid #45617a;
+  border-radius: 6px;
+}
+.landing-scrub input { width: 100%; accent-color: #5ac9ed; }
+.landing-context-note { color: #a3bbcc; font-size: .85rem; }
+.landing-phase-table { margin-block: 16px; }
+.luna-lander-assembly { transition: none; }

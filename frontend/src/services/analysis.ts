@@ -1,7 +1,8 @@
 import { demoAnalyses, type AnalysisRequest, type DemoAnalysis } from '../data/mockData'
 import { isSite04CoverageResponse, type Site04CoverageResponse } from '../features/moon3d/terrainGrid'
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/+$/, '') || 'http://127.0.0.1:8000'
+import { API_BASE_URL } from './apiConfig'
+export { API_BASE_URL } from './apiConfig'
 export const HEALTH_ENDPOINT = `${API_BASE_URL}/api/v1/health`
 export const ANALYSIS_ENDPOINT = `${API_BASE_URL}/api/v1/analysis`
 export const TERRAIN_SAMPLE_ENDPOINT = `${API_BASE_URL}/api/v1/terrain/sample`
